@@ -21,7 +21,8 @@ class Student(db.Model):
     gpa = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), default="approved")
 
-ADMIN_PASSWORD = "admin"
+with app.app_context():
+    db.create_all()
 
 @app.route("/")
 def index():
@@ -61,4 +62,3 @@ def register():
 
     flash("✅ تم حفظ البيانات بنجاح في قاعدة البيانات!", "success")
     return redirect("/")
-
