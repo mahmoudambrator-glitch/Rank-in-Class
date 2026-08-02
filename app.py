@@ -5,7 +5,6 @@ from flask_sqlalchemy import SQLAlchemy
 app = Flask(__name__)
 app.secret_key = "super_secret_key"
 
-# 1. إعداد رابط قاعدة البيانات من Vercel / Environment
 db_url = os.environ.get('DATABASE_URL')
 if db_url and db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
@@ -15,7 +14,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# 2. تعريف جدول الطلاب
 class Student(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nat_id = db.Column(db.String(14), unique=True, nullable=False)
