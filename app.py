@@ -23,9 +23,6 @@ class Student(db.Model):
     gpa = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), default="approved")
 
-with app.app_context():
-    db.create_all()
-
 ADMIN_PASSWORD = "admin"
 
 @app.route("/")
