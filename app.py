@@ -62,3 +62,8 @@ def register():
 
     flash("✅ تم حفظ البيانات بنجاح في قاعدة البيانات!", "success")
     return redirect("/")
+
+@app.route("/admin/users")
+def admin_users():
+    all_students = Student.query.all()
+    return render_template("admin_users.html", students=all_students)
