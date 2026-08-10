@@ -3,9 +3,8 @@ from flask import Flask, render_template, request, redirect, flash
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.secret_key = "super_secret_key"  # لحفظ التنبيهات والسيشن
+app.secret_key = "super_secret_key"
 
-# إعداد رابط قاعدة البيانات
 db_url = os.environ.get('DATABASE_URL')
 if db_url and db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
@@ -15,7 +14,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# جدول الطلاب
 class Student(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nat_id = db.Column(db.String(14), unique=True, nullable=False)
@@ -23,20 +21,16 @@ class Student(db.Model):
     gpa = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), default="approved")
 
-# جدول تتبع الزيارات (لتسجيل توقيت وعدد مرات دخول الموقع)
 class Visit(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     ip_address = db.Column(db.String(50))
     timestamp = db.Column(db.DateTime, default=db.func.now())
 
-# إنشاء الجداول تلقائيًا
 with app.app_context():
     db.create_all()
 
-# الصفحة الرئيسية (تسجيل البيانات + الاستعلام عن الترتيب الشخصي)
 @app.route("/", methods=["GET", "POST"])
 def index():
-    # تسجيل الزيارة للموقع تلقائياً
     visit = Visit(ip_address=request.remote_addr)
     db.session.add(visit)
     db.session.commit()
@@ -45,7 +39,6 @@ def index():
     if request.method == "POST":
         action = request.form.get("action_type")
         
-        # استعلام طالب قديم برقمـه القومي
         if action == "query":
             nat_id = request.form.get("query_nat_id", "").strip()
             student = Student.query.filter_by(nat_id=nat_id).first()
@@ -56,7 +49,6 @@ def index():
             else:
                 flash("❌ الرقم القومي غير مسجل في النظام!", "danger")
                 
-        # تسجـيل طالب جديد لأول مرة
         elif action == "register":
             name = request.form.get("name", "").strip()
             nat_id = request.form.get("nat_id", "").strip()
@@ -87,7 +79,6 @@ def index():
             db.session.add(new_student)
             db.session.commit()
             
-            # حساب ترتيبه فور التسجيل
             rank = Student.query.filter(Student.gpa > gpa).count() + 1
             total = Student.query.count()
             result = {"name": name, "rank": rank, "total": total}
@@ -95,19 +86,16 @@ def index():
 
     return render_template("index.html", result=result)
 
-# مسارات لوحة الأدمن المباشرة (إدارة الطلاب)
 @app.route("/admin/users")
 def admin_users():
     students = Student.query.order_by(Student.gpa.desc()).all()
     return render_template("admin_users.html", students=students)
 
-# مسار سجل الزيارات ومراقبة دخول الطلاب
 @app.route("/admin/visits")
 def admin_visits():
     visits = Visit.query.order_by(Visit.timestamp.desc()).all()
     return render_template("admin_visits.html", visits=visits)
 
-# مسار حذف طالب من لوحة الأدمن
 @app.route("/admin/delete/<int:id>", methods=["POST"])
 def delete_student(id):
     student = Student.query.get_or_404(id)
@@ -116,7 +104,6 @@ def delete_student(id):
     flash("🗑️ تم حذف الطالب بنجاح!", "success")
     return redirect("/admin/users")
 
-# مسار تحديث الـ GPA من لوحة الأدمن
 @app.route("/admin/update/<int:id>", methods=["POST"])
 def update_student_gpa(id):
     student = Student.query.get_or_404(id)
