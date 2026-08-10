@@ -70,7 +70,6 @@ def register():
     new_student = Student(nat_id=nat_id, name=name, gpa=gpa, status="approved")
     db.session.add(new_student)
     db.session.commit()
-
     flash("✅ تم حفظ البيانات بنجاح في قاعدة البيانات!", "success")
     return redirect("/")
 @app.route("/admin", methods=["GET", "POST"])
