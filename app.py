@@ -5,7 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 app = Flask(__name__)
 app.secret_key = "super_secret_key"  # لحفظ التنبيهات والسيشن
 
-# 1. إعداد رابط قاعدة البيانات من Vercel / Environment
+# إعداد رابط قاعدة البيانات
 db_url = os.environ.get('DATABASE_URL')
 if db_url and db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
@@ -15,7 +15,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# 2. تعريف جدول الطلاب في قاعدة البيانات
+# جدول الطلاب
 class Student(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nat_id = db.Column(db.String(14), unique=True, nullable=False)
@@ -23,59 +23,91 @@ class Student(db.Model):
     gpa = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), default="approved")
 
-# إنشاء الجداول تلقائيًا عند التشغيل
+# جدول تتبع الزيارات (لتسجيل توقيت وعدد مرات دخول الموقع)
+class Visit(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    ip_address = db.Column(db.String(50))
+    timestamp = db.Column(db.DateTime, default=db.func.now())
+
+# إنشاء الجداول تلقائيًا
 with app.app_context():
     db.create_all()
 
-@app.route("/")
+# الصفحة الرئيسية (تسجيل البيانات + الاستعلام عن الترتيب الشخصي)
+@app.route("/", methods=["GET", "POST"])
 def index():
-    approved_students = Student.query.filter_by(status="approved").order_by(Student.gpa.desc()).all()
-    return render_template("index.html", students=approved_students)
-
-@app.route("/register", methods=["POST"])
-def register():
-    name = request.form.get("name", "").strip()
-    nat_id = request.form.get("nat_id", "").strip()
-    gpa_raw = request.form.get("gpa", "").strip()
-
-    # 1. التحقق من الاسم الثلاثي
-    if len(name.split()) < 3:
-        flash("❌ يجب كتابة الاسم ثلاثياً على الأقل!", "danger")
-        return redirect("/")
-
-    # 2. التحقق من الرقم القومي (14 رقم)
-    if not (nat_id.isdigit() and len(nat_id) == 14):
-        flash("❌ الرقم القومي يجب أن يتكون من 14 رقماً صحيحاً!", "danger")
-        return redirect("/")
-
-    # التحقق من أن الرقم القومي غير مسجل مسبقاً
-    existing_student = Student.query.filter_by(nat_id=nat_id).first()
-    if existing_student:
-        flash("⚠️ هذا الرقم القومي مسجل بالفعل! تواصل مع المسؤول للتعديل.", "warning")
-        return redirect("/")
-
-    # 3. التحقق من GPA
-    try:
-        gpa = float(gpa_raw)
-        if not (0.0 <= gpa <= 4.0):
-            raise ValueError
-    except ValueError:
-        flash("❌ يرجى إدخال GPA صحيح بين 0.00 و 4.00", "danger")
-        return redirect("/")
-
-    # حفظ الطالب في قاعدة البيانات
-    new_student = Student(nat_id=nat_id, name=name, gpa=gpa, status="approved")
-    db.session.add(new_student)
+    # تسجيل الزيارة للموقع تلقائياً
+    visit = Visit(ip_address=request.remote_addr)
+    db.session.add(visit)
     db.session.commit()
-    flash("✅ تم حفظ البيانات بنجاح في قاعدة البيانات!", "success")
-    return redirect("/")
+    
+    result = None
+    if request.method == "POST":
+        action = request.form.get("action_type")
+        
+        # استعلام طالب قديم برقمـه القومي
+        if action == "query":
+            nat_id = request.form.get("query_nat_id", "").strip()
+            student = Student.query.filter_by(nat_id=nat_id).first()
+            if student:
+                rank = Student.query.filter(Student.gpa > student.gpa).count() + 1
+                total = Student.query.count()
+                result = {"name": student.name, "rank": rank, "total": total}
+            else:
+                flash("❌ الرقم القومي غير مسجل في النظام!", "danger")
+                
+        # تسجـيل طالب جديد لأول مرة
+        elif action == "register":
+            name = request.form.get("name", "").strip()
+            nat_id = request.form.get("nat_id", "").strip()
+            gpa_raw = request.form.get("gpa", "").strip()
 
-# صفحة الأدمن المباشرة بدون كلمة مرور
+            if len(name.split()) < 3:
+                flash("❌ يجب كتابة الاسم ثلاثياً على الأقل!", "danger")
+                return redirect("/")
+
+            if not (nat_id.isdigit() and len(nat_id) == 14):
+                flash("❌ الرقم القومي يجب أن يتكون من 14 رقماً صحيحاً!", "danger")
+                return redirect("/")
+
+            existing_student = Student.query.filter_by(nat_id=nat_id).first()
+            if existing_student:
+                flash("⚠️ هذا الرقم القومي مسجل بالفعل!", "warning")
+                return redirect("/")
+
+            try:
+                gpa = float(gpa_raw)
+                if not (0.0 <= gpa <= 4.0):
+                    raise ValueError
+            except ValueError:
+                flash("❌ يرجى إدخال GPA صحيح بين 0.00 و 4.00", "danger")
+                return redirect("/")
+
+            new_student = Student(nat_id=nat_id, name=name, gpa=gpa, status="approved")
+            db.session.add(new_student)
+            db.session.commit()
+            
+            # حساب ترتيبه فور التسجيل
+            rank = Student.query.filter(Student.gpa > gpa).count() + 1
+            total = Student.query.count()
+            result = {"name": name, "rank": rank, "total": total}
+            flash("✅ تم حفظ البيانات بنجاح!", "success")
+
+    return render_template("index.html", result=result)
+
+# مسارات لوحة الأدمن المباشرة (إدارة الطلاب)
 @app.route("/admin/users")
 def admin_users():
     students = Student.query.order_by(Student.gpa.desc()).all()
     return render_template("admin_users.html", students=students)
-# مسار حذف طالب
+
+# مسار سجل الزيارات ومراقبة دخول الطلاب
+@app.route("/admin/visits")
+def admin_visits():
+    visits = Visit.query.order_by(Visit.timestamp.desc()).all()
+    return render_template("admin_visits.html", visits=visits)
+
+# مسار حذف طالب من لوحة الأدمن
 @app.route("/admin/delete/<int:id>", methods=["POST"])
 def delete_student(id):
     student = Student.query.get_or_404(id)
@@ -84,7 +116,7 @@ def delete_student(id):
     flash("🗑️ تم حذف الطالب بنجاح!", "success")
     return redirect("/admin/users")
 
-# مسار تعديل الـ GPA
+# مسار تحديث الـ GPA من لوحة الأدمن
 @app.route("/admin/update/<int:id>", methods=["POST"])
 def update_student_gpa(id):
     student = Student.query.get_or_404(id)
@@ -98,5 +130,8 @@ def update_student_gpa(id):
         else:
             flash("❌ القيمة يجب أن تكون بين 0.00 و 4.00", "danger")
     except ValueError:
-        flash("❌ يجيب إدخال رقم صحيح للـ GPA", "danger")
+        flash("❌ يرجى إدخال رقم صحيح للـ GPA", "danger")
     return redirect("/admin/users")
+
+if __name__ == "__main__":
+    app.run(debug=True)
