@@ -2,11 +2,12 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>منصة ترتيب الدفعة</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
 </head>
 <body class="bg-light">
-    <div class="container py-5">
+    <div class="container py-4">
         <h1 class="text-center mb-4">🎓 منصة ترتيب الدفعة</h1>
 
         <!-- عرض التنبيهات -->
@@ -20,25 +21,25 @@
           {% endif %}
         {% endwith %}
 
-        <!-- عرض نتيجة الترتيب الشخصي للطالب (تلقائي فور التسجيل أو الاستعلام) -->
+        <!-- عرض نتيجة الترتيب الشخصي للطالب -->
         {% if result %}
         <div class="card shadow border-success mb-4 p-4 text-center bg-white">
             <h3 class="text-success">أهلاً بك، {{ result.name }}</h3>
             <p class="fs-4 mt-2">ترتيبك الحالي هو: <span class="badge bg-primary">#{{ result.rank }}</span> من أصل {{ result.total }} طالب مسجل.</p>
-            <p class="text-muted small">هذه النتيجة سرية وتظهر لك وحدك بناءً على التحديث اللحظي للدفعة.</p>
+            <p class="text-muted small mb-0">هذه النتيجة سرية وتظهر لك وحدك بناءً على التحديث اللحظي للدفعة.</p>
         </div>
         {% endif %}
 
         <div class="row g-4">
             <!-- قسم الاستعلام عن الترتيب بالرقم القومي (لمن سبق تسجيله) -->
-            <div class="col-md-6">
+            <div class="col-lg-6 col-md-12">
                 <div class="card shadow-sm p-4 h-100">
-                    <h3 class="mb-3 text-secondary">🔍 اعرف ترتيبك الشخصي</h3>
+                    <h3 class="mb-3 text-secondary fs-4">🔍 اعرف ترتيبك الشخصي</h3>
                     <form method="POST">
                         <input type="hidden" name="action_type" value="query">
                         <div class="mb-3">
                             <label class="form-label">الرقم القومي:</label>
-                            <input type="text" name="query_nat_id" id="queryNatId" class="form-control" placeholder="أدخل الرقم القومي المكون من 14 رقماً" required>
+                            <input type="text" name="query_nat_id" id="queryNatId" class="form-control" placeholder="أدخل الرقم القومي (14 رقماً)" required>
                         </div>
                         <button type="submit" class="btn btn-secondary w-100" onclick="saveNatId()">استعلام عن الترتيب</button>
                     </form>
@@ -46,9 +47,9 @@
             </div>
 
             <!-- قسم تسجيل بيانات طالب جديد -->
-            <div class="col-md-6">
+            <div class="col-lg-6 col-md-12">
                 <div class="card shadow-sm p-4 h-100">
-                    <h3 class="mb-3 text-primary">📝 تسجيل بيانات طالب</h3>
+                    <h3 class="mb-3 text-primary fs-4">📝 تسجيل بيانات طالب</h3>
                     <form method="POST">
                         <input type="hidden" name="action_type" value="register">
                         <div class="mb-3">
@@ -70,7 +71,7 @@
         </div>
     </div>
 
-    <!-- جافاسكريبت لحفظ الرقم القومي في المتصفح لتسهيل الاستعلام لاحقاً -->
+    <!-- كود الجافاسكريبت لحفظ الرقم القومي في المتصفح -->
     <script>
         function saveNatId() {
             let val = document.getElementById('queryNatId').value;
