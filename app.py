@@ -75,3 +75,28 @@ def register():
 def admin_users():
     students = Student.query.order_by(Student.gpa.desc()).all()
     return render_template("admin_users.html", students=students)
+# مسار حذف طالب
+@app.route("/admin/delete/<int:id>", methods=["POST"])
+def delete_student(id):
+    student = Student.query.get_or_404(id)
+    db.session.delete(student)
+    db.session.commit()
+    flash("🗑️ تم حذف الطالب بنجاح!", "success")
+    return redirect("/admin/users")
+
+# مسار تعديل الـ GPA
+@app.route("/admin/update/<int:id>", methods=["POST"])
+def update_student_gpa(id):
+    student = Student.query.get_or_404(id)
+    new_gpa = request.form.get("gpa")
+    try:
+        gpa = float(new_gpa)
+        if 0.0 <= gpa <= 4.0:
+            student.gpa = gpa
+            db.session.commit()
+            flash("✅ تم تحديث الـ GPA بنجاح!", "success")
+        else:
+            flash("❌ القيمة يجب أن تكون بين 0.00 و 4.00", "danger")
+    except ValueError:
+        flash("❌ يجيب إدخال رقم صحيح للـ GPA", "danger")
+    return redirect("/admin/users")
