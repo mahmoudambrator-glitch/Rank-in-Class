@@ -73,6 +73,19 @@ def register():
 
     flash("✅ تم حفظ البيانات بنجاح في قاعدة البيانات!", "success")
     return redirect("/")
+@app.route("/admin", methods=["GET", "POST"])
+def admin():
+    if request.method == "POST":
+        password = request.form.get("password")
+        if password == ADMIN_PASSWORD:
+            return redirect("/admin/users")
+        else:
+            flash("❌ كلمة المرور غير صحيحة!", "danger")
+    return render_template("admin_login.html")
 
+@app.route("/admin/users")
+def admin_users():
+    students = Student.query.order_by(Student.gpa.desc()).all()
+    return render_template("admin_users.html", students=students)
 if __name__ == "__main__":
     app.run(debug=True)
