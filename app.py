@@ -86,5 +86,3 @@ def admin():
 def admin_users():
     students = Student.query.order_by(Student.gpa.desc()).all()
     return render_template("admin_users.html", students=students)
-if __name__ == "__main__":
-    app.run(debug=True)
