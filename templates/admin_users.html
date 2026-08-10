@@ -1,137 +1,99 @@
-import os
-from flask import Flask, render_template, request, redirect, flash
-from flask_sqlalchemy import SQLAlchemy
-
-app = Flask(__name__)
-app.secret_key = "super_secret_key"  # لحفظ التنبيهات والسيشن
-
-# إعداد رابط قاعدة البيانات
-db_url = os.environ.get('DATABASE_URL')
-if db_url and db_url.startswith("postgres://"):
-    db_url = db_url.replace("postgres://", "postgresql://", 1)
-
-app.config['SQLALCHEMY_DATABASE_URI'] = db_url or 'sqlite:///local.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db = SQLAlchemy(app)
-
-# جدول الطلاب
-class Student(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    nat_id = db.Column(db.String(14), unique=True, nullable=False)
-    name = db.Column(db.String(150), nullable=False)
-    gpa = db.Column(db.Float, nullable=False)
-    status = db.Column(db.String(20), default="approved")
-
-# جدول تتبع الزيارات (لتسجيل توقيت وعدد مرات دخول الموقع)
-class Visit(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    ip_address = db.Column(db.String(50))
-    timestamp = db.Column(db.DateTime, default=db.func.now())
-
-# إنشاء الجداول تلقائيًا
-with app.app_context():
-    db.create_all()
-
-# الصفحة الرئيسية (تسجيل البيانات + الاستعلام عن الترتيب الشخصي)
-@app.route("/", methods=["GET", "POST"])
-def index():
-    # تسجيل الزيارة للموقع تلقائياً
-    visit = Visit(ip_address=request.remote_addr)
-    db.session.add(visit)
-    db.session.commit()
-    
-    result = None
-    if request.method == "POST":
-        action = request.form.get("action_type")
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>لوحة تحكم الأعضاء - منصة ترتيب الدفعة</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <h1 class="text-center mb-4">🔒 لوحة تحكم الأعضاء والأرقام القومية السرية</h1>
         
-        # استعلام طالب قديم برقمـه القومي
-        if action == "query":
-            nat_id = request.form.get("query_nat_id", "").strip()
-            student = Student.query.filter_by(nat_id=nat_id).first()
-            if student:
-                rank = Student.query.filter(Student.gpa > student.gpa).count() + 1
-                total = Student.query.count()
-                result = {"name": student.name, "rank": rank, "total": total}
-            else:
-                flash("❌ الرقم القومي غير مسجل في النظام!", "danger")
-                
-        # تسجـيل طالب جديد لأول مرة
-        elif action == "register":
-            name = request.form.get("name", "").strip()
-            nat_id = request.form.get("nat_id", "").strip()
-            gpa_raw = request.form.get("gpa", "").strip()
+        <div class="d-flex justify-content-center gap-2 mb-4">
+            <a href="{{ url_for('admin_users') }}" class="btn btn-dark">إدارة الطلاب</a>
+            <a href="{{ url_for('admin_visits') }}" class="btn btn-outline-dark">سجل زيارات الموقع</a>
+        </div>
 
-            if len(name.split()) < 3:
-                flash("❌ يجب كتابة الاسم ثلاثياً على الأقل!", "danger")
-                return redirect("/")
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
 
-            if not (nat_id.isdigit() and len(nat_id) == 14):
-                flash("❌ الرقم القومي يجب أن يتكون من 14 رقماً صحيحاً!", "danger")
-                return redirect("/")
+        <div class="mb-3">
+            <input type="text" id="searchInput" class="form-control" placeholder="🔍 ابحث باسم الطالب أو الرقم القومي..." onkeyup="searchTable()">
+        </div>
 
-            existing_student = Student.query.filter_by(nat_id=nat_id).first()
-            if existing_student:
-                flash("⚠️ هذا الرقم القومي مسجل بالفعل!", "warning")
-                return redirect("/")
+        <div class="card shadow-sm p-4">
+            <table class="table table-striped table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>اسم الطالب</th>
+                        <th>الرقم القومي (سري)</th>
+                        <th>الـ GPA</th>
+                        <th>الحالة</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ student.name }}</td>
+                        <td><span class="badge bg-secondary">{{ student.nat_id }}</span></td>
+                        <td>
+                            <form action="{{ url_for('update_student_gpa', id=student.id) }}" method="POST" class="d-flex gap-1">
+                                <input type="number" step="0.01" name="gpa" value="{{ student.gpa }}" class="form-control form-control-sm" style="width: 80px;" required>
+                                <button type="submit" class="btn btn-sm btn-primary">تحديث</button>
+                            </form>
+                        </td>
+                        <td>{{ student.status }}</td>
+                        <td>
+                            <form action="{{ url_for('delete_student', id=student.id) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف هذا الطالب؟');">
+                                <button type="submit" class="btn btn-sm btn-danger">حذف</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">لا يوجد طلاب مسجلين حتى الآن.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="text-center mt-3">
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">العودة للرئيسية</a>
+        </div>
+    </div>
 
-            try:
-                gpa = float(gpa_raw)
-                if not (0.0 <= gpa <= 4.0):
-                    raise ValueError
-            except ValueError:
-                flash("❌ يرجى إدخال GPA صحيح بين 0.00 و 4.00", "danger")
-                return redirect("/")
+    <script>
+    function searchTable() {
+        let input = document.getElementById("searchInput");
+        let filter = input.value.toLowerCase();
+        let table = document.querySelector("table tbody");
+        let rows = table.getElementsByTagName("tr");
 
-            new_student = Student(nat_id=nat_id, name=name, gpa=gpa, status="approved")
-            db.session.add(new_student)
-            db.session.commit()
-            
-            # حساب ترتيبه فور التسجيل
-            rank = Student.query.filter(Student.gpa > gpa).count() + 1
-            total = Student.query.count()
-            result = {"name": name, "rank": rank, "total": total}
-            flash("✅ تم حفظ البيانات بنجاح!", "success")
-
-    return render_template("index.html", result=result)
-
-# مسارات لوحة الأدمن المباشرة (إدارة الطلاب)
-@app.route("/admin/users")
-def admin_users():
-    students = Student.query.order_by(Student.gpa.desc()).all()
-    return render_template("admin_users.html", students=students)
-
-# مسار سجل الزيارات ومراقبة دخول الطلاب
-@app.route("/admin/visits")
-def admin_visits():
-    visits = Visit.query.order_by(Visit.timestamp.desc()).all()
-    return render_template("admin_visits.html", visits=visits)
-
-# مسار حذف طالب من لوحة الأدمن
-@app.route("/admin/delete/<int:id>", methods=["POST"])
-def delete_student(id):
-    student = Student.query.get_or_404(id)
-    db.session.delete(student)
-    db.session.commit()
-    flash("🗑️ تم حذف الطالب بنجاح!", "success")
-    return redirect("/admin/users")
-
-# مسار تحديث الـ GPA من لوحة الأدمن
-@app.route("/admin/update/<int:id>", methods=["POST"])
-def update_student_gpa(id):
-    student = Student.query.get_or_404(id)
-    new_gpa = request.form.get("gpa")
-    try:
-        gpa = float(new_gpa)
-        if 0.0 <= gpa <= 4.0:
-            student.gpa = gpa
-            db.session.commit()
-            flash("✅ تم تحديث الـ GPA بنجاح!", "success")
-        else:
-            flash("❌ القيمة يجب أن تكون بين 0.00 و 4.00", "danger")
-    except ValueError:
-        flash("❌ يرجى إدخال رقم صحيح للـ GPA", "danger")
-    return redirect("/admin/users")
-
-if __name__ == "__main__":
-    app.run(debug=True)
+        for (let i = 0; i < rows.length; i++) {
+            let nameCol = rows[i].getElementsByTagName("td")[1];
+            let natIdCol = rows[i].getElementsByTagName("td")[2];
+            if (nameCol && natIdCol) {
+                let nameValue = nameCol.textContent || nameCol.innerText;
+                let natIdValue = natIdCol.textContent || natIdCol.innerText;
+                if (nameValue.toLowerCase().indexOf(filter) > -1 || natIdValue.indexOf(filter) > -1) {
+                    rows[i].style.display = "";
+                } else {
+                    rows[i].style.display = "none";
+                }
+            }
+        }
+    }
+    </script>
+</body>
+</html>
