@@ -27,11 +27,8 @@ class Student(db.Model):
 with app.app_context():
     db.create_all()
 
-ADMIN_PASSWORD = "admin"
-
 @app.route("/")
 def index():
-    # تعديل الاستعلام هنا ليعمل بشكل صحيح بدون أخطاء
     approved_students = Student.query.filter_by(status="approved").order_by(Student.gpa.desc()).all()
     return render_template("index.html", students=approved_students)
 
@@ -72,16 +69,8 @@ def register():
     db.session.commit()
     flash("✅ تم حفظ البيانات بنجاح في قاعدة البيانات!", "success")
     return redirect("/")
-@app.route("/admin", methods=["GET", "POST"])
-def admin():
-    if request.method == "POST":
-        password = request.form.get("password")
-        if password == ADMIN_PASSWORD:
-            return redirect("/admin/users")
-        else:
-            flash("❌ كلمة المرور غير صحيحة!", "danger")
-    return render_template("admin_login.html")
 
+# صفحة الأدمن المباشرة بدون كلمة مرور
 @app.route("/admin/users")
 def admin_users():
     students = Student.query.order_by(Student.gpa.desc()).all()
