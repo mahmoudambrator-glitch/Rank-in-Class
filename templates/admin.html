@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">🛠️ لوحة التحكم المركزية الشاملة</h2>
+        <hr>
+    </div>
+</div>
+
+<!-- إحصائيات سريعة -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white p-3 shadow-sm">
+            <h5>إجمالي الزيارات</h5>
+            <h3>{{ total_visits }}</h3>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white p-3 shadow-sm">
+            <h5>المواد الدراسية</h5>
+            <h3>{{ subjects|length }}</h3>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white p-3 shadow-sm">
+            <h5>الطلاب المسجلين</h5>
+            <h3>{{ students|length }}</h3>
+        </div>
+    </div>
+</div>
+
+<!-- إدارة المكتبة -->
+<div class="card mb-5 shadow-sm">
+    <div class="card-header bg-dark text-white">
+        <h4>📚 إدارة المكتبة الدراسية (المواد والملفات)</h4>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('add_subject') }}" method="POST" class="mb-4 p-3 bg-light rounded">
+            <h5>إضافة مادة دراسية جديدة</h5>
+            <div class="mb-3">
+                <input type="text" name="name" class="form-control" placeholder="اسم المادة" required>
+            </div>
+            <div class="mb-3">
+                <textarea name="description" class="form-control" placeholder="وصف مختصر"></textarea>
+            </div>
+            <button type="submit" class="btn btn-success">إضافة المادة</button>
+        </form>
+
+        <form action="{{ url_for('add_file') }}" method="POST" enctype="multipart/form-data" class="mb-4 p-3 bg-light rounded">
+            <h5>رفع ملف / ملخص للمادة</h5>
+            <div class="mb-3">
+                <select name="subject_id" class="form-control" required>
+                    <option value="">اختر المادة</option>
+                    {% for sub in subjects %}
+                    <option value="{{ sub.id }}">{{ sub.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <select name="file_type" class="form-control">
+                    <option value="ملخص">ملخص</option>
+                    <option value="محاضرة">محاضرة</option>
+                    <option value="كتاب">كتاب</option>
+                    <option value="امتحان">امتحان سابق</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <input type="file" name="file" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">رفع الملف</button>
+        </form>
+
+        <h5>المواد الحالية والملفات:</h5>
+        <ul class="list-group mb-4">
+            {% for sub in subjects %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span><strong>{{ sub.name }}</strong> (عدد الملفات: {{ sub.files|length }})</span>
+                <form action="{{ url_for('delete_subject', subject_id=sub.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('حذف المادة بكل ملفاتها؟')">حذف المادة</button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <!-- عرض جدول جميع الملفات المرفوعة وعدد مرات فتحها -->
+        <h5 class="mt-4">📁 تفاصيل الملفات المرفوعة وعدد المشاهدات:</h5>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped text-center align-middle">
+                <thead>
+                    <tr>
+                        <th>اسم الملف / الكتاب</th>
+                        <th>المادة</th>
+                        <th>النوع</th>
+                        <th>عدد مرات الفتح</th>
+                        <th>الإجراء</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for file in all_files %}
+                    <tr>
+                        <td>{{ file.title }}</td>
+                        <td>{{ file.subject.name }}</td>
+                        <td><span class="badge bg-secondary">{{ file.file_type }}</span></td>
+                        <td class="fw-bold text-success">{{ file.views_count }} مرة</td>
+                        <td>
+                            <form action="{{ url_for('delete_file', file_id=file.id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('حذف الملف نهائياً؟')">حذف</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- إدارة الطلاب -->
+<div class="card mb-5 shadow-sm">
+    <div class="card-header bg-secondary text-white">
+        <h4>🎓 إدارة طلاب الدفعة وتعديل الـ GPA</h4>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped text-center align-middle">
+                <thead>
+                    <tr>
+                        <th>الاسم ثلاثي</th>
+                        <th>الرقم القومي</th>
+                        <th>الـ GPA</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>{{ student.name }}</td>
+                        <td>{{ student.nat_id }}</td>
+                        <td>
+                            <form action="{{ url_for('update_student_gpa', id=student.id) }}" method="POST" class="d-inline-flex gap-1 justify-content-center">
+                                <input type="number" step="0.01" name="gpa" value="{{ student.gpa }}" class="form-control form-control-sm" style="width: 90px;" required>
+                                <button type="submit" class="btn btn-warning btn-sm">تحديث</button>
+                            </form>
+                        </td>
+                        <td>
+                            <form action="{{ url_for('delete_student', id=student.id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('حذف الطالب نهائياً؟')">حذف</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- سجل نشاط الطلاب (الاستعلامات والتسجيلات) -->
+<div class="card shadow-sm mb-5">
+    <div class="card-header bg-warning text-dark">
+        <h4 class="mb-0">📋 سجل نشاط الطلاب (من قام بالاستعلام أو التسجيل)</h4>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm table-striped text-center align-middle">
+                <thead>
+                    <tr>
+                        <th>اسم الطالب</th>
+                        <th>الرقم القومي</th>
+                        <th>نوع الإجراء</th>
+                        <th>الوقت والتاريخ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for activity in student_activities %}
+                    <tr>
+                        <td class="fw-bold">{{ activity.student_name }}</td>
+                        <td>{{ activity.nat_id }}</td>
+                        <td>
+                            {% if activity.action_type == "تسجيل جديد في الدفعة" %}
+                                <span class="badge bg-success">تسجيل جديد</span>
+                            {% else %}
+                                <span class="badge bg-primary">استعلام عن الترتيب</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ activity.timestamp.strftime('%Y-%m-%d %I:%M %p') }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-muted">لا توجد أنشطة مسجلة حتى الآن.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- سجل الزيارات -->
+<div class="card shadow-sm mb-5">
+    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">📊 سجل حركة الزيارات الأخيرة للموقع</h4>
+    </div>
+    <div class="card-body">
+        <!-- زر تصفير سجلات الزيارات -->
+        <form action="{{ url_for('clear_visits') }}" method="POST" class="mb-3" onsubmit="return confirm('هل أنت متأكد من تصفير جميع سجلات الزيارات؟');">
+            <button type="submit" class="btn btn-danger btn-sm">🗑️ تصفير كل سجلات الزيارات</button>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-sm table-striped text-center align-middle">
+                <thead>
+                    <tr>
+                        <th>نوع الزائر / الطالب</th>
+                        <th>رقم الـ IP</th>
+                        <th>الصفحة الزائرة</th>
+                        <th>الوقت والتاريخ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for visit in recent_visits %}
+                    <tr>
+                        <td><span class="badge bg-dark">{{ visit.visitor_type }}</span></td>
+                        <td>{{ visit.ip_address }}</td>
+                        <td><code>{{ visit.page_visited }}</code></td>
+                        <td>{{ visit.timestamp.strftime('%Y-%m-%d %I:%M %p') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

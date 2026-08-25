@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container my-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold text-primary">📚 مادة: {{ subject.name }}</h2>
+            <p class="text-muted fs-5">{{ subject.description or 'لا يوجد وصف متاح لهذه المادة حالياً.' }}</p>
+            <hr>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <h4 class="mb-3">الملفات المتاحة:</h4>
+            
+            {% if subject.files %}
+            <div class="list-group shadow-sm">
+                {% for file in subject.files %}
+                <div class="list-group-item d-flex justify-content-between align-items-center p-3">
+                    <div>
+                        <span class="badge bg-secondary me-2">{{ file.file_type }}</span>
+                        <strong class="fs-5">{{ file.title }}</strong>
+                        <small class="text-muted d-block mt-1">عدد مرات الفتح: {{ file.views_count }}</small>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('open_file', file_id=file.id) }}" class="btn btn-outline-primary btn-sm px-4 fw-bold" target="_blank">
+                            📂 فتح / تحميل الملف
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-warning text-center py-4">
+                <h5>عذراً، لا توجد ملفات مرفوعة لهذه المادة حتى الآن.</h5>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="mt-4">
+        <a href="{{ url_for('home') }}" class="btn btn-secondary">← العودة إلى الرئيسية</a>
+    </div>
+</div>
+{% endblock %}
