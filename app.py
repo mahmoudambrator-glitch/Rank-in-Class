@@ -112,7 +112,8 @@ def open_file(file_id):
     uploads_dir = os.path.join(app.root_path, 'static', 'uploads')
     filename = os.path.basename(file_item.file_path)
     
-    return send_from_directory(uploads_dir, filename)
+    # التعديل هنا: إضافة as_attachment=False لفتح الملف بدلاً من تحميله
+    return send_from_directory(uploads_dir, filename, as_attachment=False)
 
 # --- لوحة التحكم المركزية ---
 
