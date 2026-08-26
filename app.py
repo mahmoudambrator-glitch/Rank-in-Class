@@ -107,9 +107,12 @@ def open_file(file_id):
     file_item = MaterialFile.query.get_or_404(file_id)
     file_item.views_count = (file_item.views_count or 0) + 1
     db.session.commit()
-    directory = os.path.join(app.root_path, 'static', 'uploads')
+    
+    # تحديد مسار المجلد واسم الملف بشكل دقيق وآمن للفتح المباشر
+    uploads_dir = os.path.join(app.root_path, 'static', 'uploads')
     filename = os.path.basename(file_item.file_path)
-    return send_from_directory(directory, filename)
+    
+    return send_from_directory(uploads_dir, filename)
 
 # --- لوحة التحكم المركزية ---
 
@@ -256,7 +259,7 @@ def student_ranking():
                 flash("❌ يرجى إدخال GPA صحيح بين 0.00 و 4.00", "danger")
                 return redirect("/ranking")
 
-            new_student = Student(nat_id=nat_id, name=name, gpa=gpa, status="approved")
+            (new_student) = Student(nat_id=nat_id, name=name, gpa=gpa, status="approved")
             db.session.add(new_student)
             
             # حفظ عملية التسجيل الجديد في جدول الأنشطة الجديد
