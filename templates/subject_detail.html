@@ -23,8 +23,8 @@
                         <small class="text-muted d-block mt-1">عدد مرات الفتح: {{ file.views_count }}</small>
                     </div>
                     <div>
-                        <a href="https://docs.google.com/viewer?url={{ request.host_url }}static/uploads/{{ file.title }}&embedded=true" class="btn btn-outline-primary btn-sm px-4 fw-bold" target="_blank">
-                            عرض الملف
+                        <a href="{{ url_for('open_file', file_id=file.id) }}" class="btn btn-outline-primary btn-sm px-4 fw-bold" target="_blank">
+                            📂 فتح / تحميل الملف
                         </a>
                     </div>
                 </div>
