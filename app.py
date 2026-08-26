@@ -108,12 +108,13 @@ def open_file(file_id):
     file_item.views_count = (file_item.views_count or 0) + 1
     db.session.commit()
     
-    # تحديد مسار المجلد واسم الملف بشكل دقيق وآمن للفتح المباشر
     uploads_dir = os.path.join(app.root_path, 'static', 'uploads')
     filename = os.path.basename(file_item.file_path)
     
-    # التعديل هنا: إضافة as_attachment=False لفتح الملف بدلاً من تحميله
-    return send_from_directory(uploads_dir, filename, as_attachment=False)
+    # استخدام mimetype مخصص وتحديد as_attachment=False مع إجبار المتصفح على العرض الداخلي
+    response = send_from_directory(uploads_dir, filename, as_attachment=False)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response
 
 # --- لوحة التحكم المركزية ---
 
