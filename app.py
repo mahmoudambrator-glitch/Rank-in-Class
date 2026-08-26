@@ -9,6 +9,7 @@ from flask import (
     request,
     url_for,
     session,
+    send_from_directory,
 )
 from flask_sqlalchemy import SQLAlchemy
 
@@ -106,7 +107,9 @@ def open_file(file_id):
     file_item = MaterialFile.query.get_or_404(file_id)
     file_item.views_count = (file_item.views_count or 0) + 1
     db.session.commit()
-    return redirect(url_for('static', filename=file_item.file_path))
+    directory = os.path.join(app.root_path, 'static', 'uploads')
+    filename = os.path.basename(file_item.file_path)
+    return send_from_directory(directory, filename)
 
 # --- لوحة التحكم المركزية ---
 
