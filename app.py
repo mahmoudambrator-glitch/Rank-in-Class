@@ -278,7 +278,7 @@ def delete_student(id):
     return redirect("/admin")
 
 @app.route("/admin/update_student/<int:id>", methods=["POST"])
-def update_student_gps(id):
+def update_student_gpa(id):
     student = Student.query.get_or_404(id)
     try:
         gpa = float(request.form.get("gpa"))
