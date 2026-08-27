@@ -1,5 +1,6 @@
 from datetime import datetime
 import os
+import mimetypes
 from flask import (
     Flask,
     abort,
@@ -111,8 +112,12 @@ def open_file(file_id):
     uploads_dir = os.path.join(app.root_path, 'static', 'uploads')
     filename = os.path.basename(file_item.file_path)
     
-    # استخدام mimetype مخصص وتحديد as_attachment=False مع إجبار المتصفح على العرض الداخلي
-    response = send_from_directory(uploads_dir, filename, as_attachment=False)
+    # تحديد نوع الملف بدقة لكي يتعرف عليه نظام الموبايل ويفتحه في تطبيقاته مباشرة
+    mime_type, _ = mimetypes.guess_type(filename)
+    if not mime_type:
+        mime_type = 'application/octet-stream'
+    
+    response = send_from_directory(uploads_dir, filename, as_attachment=False, mimetype=mime_type)
     response.headers["X-Content-Type-Options"] = "nosniff"
     return response
 
