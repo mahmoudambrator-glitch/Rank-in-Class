@@ -61,12 +61,11 @@ class VisitLog(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     page_visited = db.Column(db.String(200))
 
-# جدول جديد مخصص لتسجيل أنشطة الطلاب (استعلام أو تسجيل جديد) بالوقت والاسم
 class StudentActivityLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     student_name = db.Column(db.String(150), nullable=False)
     nat_id = db.Column(db.String(14), nullable=False)
-    action_type = db.Column(db.String(100), nullable=False)  # (استعلام عن الترتيب / تسجيل جديد)
+    action_type = db.Column(db.String(100), nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
 
@@ -103,16 +102,21 @@ def subject_detail(subject_id):
     subject = Subject.query.get_or_404(subject_id)
     return render_template('subject_detail.html', subject=subject)
 
-@app.route('/open_file/<int:file_id>')
-def open_file(file_id):
+# مسار المعاينة الداخلية الجديد لفتح الملف داخل الـ iframe
+@app.route('/view_pdf/<int:file_id>')
+def view_pdf(file_id):
     file_item = MaterialFile.query.get_or_404(file_id)
     file_item.views_count = (file_item.views_count or 0) + 1
     db.session.commit()
+    return render_template('view_pdf.html', file_item=file_item)
+
+@app.route('/open_file/<int:file_id>')
+def open_file(file_id):
+    file_item = MaterialFile.query.get_or_404(file_id)
     
     uploads_dir = os.path.join(app.root_path, 'static', 'uploads')
     filename = os.path.basename(file_item.file_path)
     
-    # تحديد نوع الملف بدقة لكي يتعرف عليه نظام الموبايل ويفتحه في تطبيقاته مباشرة
     mime_type, _ = mimetypes.guess_type(filename)
     if not mime_type:
         mime_type = 'application/octet-stream'
@@ -130,8 +134,6 @@ def admin():
     all_files = MaterialFile.query.all()
     recent_visits = VisitLog.query.order_by(VisitLog.timestamp.desc()).limit(20).all()
     students = Student.query.order_by(Student.gpa.desc()).all()
-    
-    # جلب سجل أنشطة الطلاب (استعلام وتسجيل) مرتبة من الأحدث للأقدم
     student_activities = StudentActivityLog.query.order_by(StudentActivityLog.timestamp.desc()).limit(30).all()
 
     return render_template(
@@ -230,7 +232,6 @@ def student_ranking():
                 total = Student.query.count()
                 result = {"name": student.name, "rank": rank, "total": total}
                 
-                # حفظ عملية الاستعلام في جدول الأنشطة الجديد
                 log = StudentActivityLog(
                     student_name=student.name,
                     nat_id=nat_id,
@@ -266,10 +267,9 @@ def student_ranking():
                 flash("❌ يرجى إدخال GPA صحيح بين 0.00 و 4.00", "danger")
                 return redirect("/ranking")
 
-            (new_student) = Student(nat_id=nat_id, name=name, gpa=gpa, status="approved")
+            new_student = Student(nat_id=nat_id, name=name, gpa=gpa, status="approved")
             db.session.add(new_student)
             
-            # حفظ عملية التسجيل الجديد في جدول الأنشطة الجديد
             log = StudentActivityLog(
                 student_name=name,
                 nat_id=nat_id,
