@@ -4,7 +4,6 @@
     <div class="row mb-4">
         <div class="col-12">
             <h2 class="fw-bold text-primary">📚 مادة: {{ subject.name }}</h2>
-            <p class="text-muted fs-5">{{ subject.description or 'لا يوجد وصف متاح لهذه المادة حالياً.' }}</p>
             <hr>
         </div>
     </div>
@@ -20,7 +19,6 @@
                     <div>
                         <span class="badge bg-secondary me-2">{{ file.file_type }}</span>
                         <strong class="fs-5">{{ file.title }}</strong>
-                        <small class="text-muted d-block mt-1">عدد مرات الفتح: {{ file.views_count }}</small>
                     </div>
                     <div>
                         <a href="{{ url_for('open_file', file_id=file.id) }}" class="btn btn-outline-primary btn-sm px-4 fw-bold" target="_blank">
