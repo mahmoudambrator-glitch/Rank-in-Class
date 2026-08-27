@@ -1,6 +1,5 @@
 from datetime import datetime
 import os
-import mimetypes
 from flask import (
     Flask,
     abort,
@@ -10,7 +9,6 @@ from flask import (
     request,
     url_for,
     session,
-    send_from_directory,
 )
 from flask_sqlalchemy import SQLAlchemy
 
@@ -102,28 +100,12 @@ def subject_detail(subject_id):
     subject = Subject.query.get_or_404(subject_id)
     return render_template('subject_detail.html', subject=subject)
 
-# مسار المعاينة الداخلية الجديد لفتح الملف داخل الـ iframe
-@app.route('/view_pdf/<int:file_id>')
-def view_pdf(file_id):
-    file_item = MaterialFile.query.get_or_404(file_id)
-    file_item.views_count = (file_item.views_count or 0) + 1
-    db.session.commit()
-    return render_template('view_pdf.html', file_item=file_item)
-
 @app.route('/open_file/<int:file_id>')
 def open_file(file_id):
     file_item = MaterialFile.query.get_or_404(file_id)
-    
-    uploads_dir = os.path.join(app.root_path, 'static', 'uploads')
-    filename = os.path.basename(file_item.file_path)
-    
-    mime_type, _ = mimetypes.guess_type(filename)
-    if not mime_type:
-        mime_type = 'application/octet-stream'
-    
-    response = send_from_directory(uploads_dir, filename, as_attachment=False, mimetype=mime_type)
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    return response
+    file_item.views_count = (file_item.views_count or 0) + 1
+    db.session.commit()
+    return redirect(url_for('static', filename=file_item.file_path))
 
 # --- لوحة التحكم المركزية ---
 
@@ -296,7 +278,7 @@ def delete_student(id):
     return redirect("/admin")
 
 @app.route("/admin/update_student/<int:id>", methods=["POST"])
-def update_student_gpa(id):
+def update_student_gps(id):
     student = Student.query.get_or_404(id)
     try:
         gpa = float(request.form.get("gpa"))
