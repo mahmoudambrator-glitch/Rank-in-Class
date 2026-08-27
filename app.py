@@ -1,4 +1,5 @@
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import os
 from flask import (
     Flask,
@@ -56,7 +57,7 @@ class VisitLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     visitor_type = db.Column(db.String(50), default="زائر") 
     ip_address = db.Column(db.String(50))
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(ZoneInfo("Africa/Cairo")))
     page_visited = db.Column(db.String(200))
 
 class StudentActivityLog(db.Model):
@@ -64,7 +65,7 @@ class StudentActivityLog(db.Model):
     student_name = db.Column(db.String(150), nullable=False)
     nat_id = db.Column(db.String(14), nullable=False)
     action_type = db.Column(db.String(100), nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(ZoneInfo("Africa/Cairo")))
 
 
 with app.app_context():
