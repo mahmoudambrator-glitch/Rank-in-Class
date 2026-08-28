@@ -3,47 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مكتبة AMBRATOR ومنصة الترتيب</title>
+    <title>مكتبة Ꭿ ᎷᏰ ᎡᎯ ᎿᏫᎡ ومنصة الترتيب</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <style>
         :root {
-            --primary-color: #1e293b;
-            --secondary-color: #3b82f6;
-            --bg-color: #f8fafc;
+            --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
         }
         body { 
             font-family: Tahoma, sans-serif; 
             background-color: var(--bg-color); 
-            color: #334155;
+            color: #1e293b;
         }
         .navbar-custom {
-            background: linear-gradient(135deg, #0f172a, #1e293b);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            background: var(--primary-gradient);
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.3);
         }
         .brand-title {
-            font-size: 18px;
-            font-weight: 700;
+            font-size: 19px;
+            font-weight: 800;
             letter-spacing: 0.5px;
-            color: #f8fafc !important;
-            white-space: nowrap;
+            color: #ffffff !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .btn-custom-outline {
+        .btn-custom-light {
+            background: rgba(255, 255, 255, 0.15);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            color: #fff;
+            color: #ffffff;
+            font-weight: 600;
             transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
         }
-        .btn-custom-outline:hover {
-            background-color: #fff;
-            color: #0f172a;
-        }
-        .card {
-            border: none;
-            border-radius: 12px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        .btn-custom-light:hover {
+            background: #ffffff;
+            color: #4f46e5;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
     </style>
 </head>
@@ -52,7 +47,7 @@
         <div class="container d-flex justify-content-between align-items-center">
             <a class="navbar-brand brand-title m-0" href="{{ url_for('home') }}">مكتبة AMBRATOR</a>
             <div class="d-flex align-items-center">
-                <a class="btn btn-custom-outline btn-sm px-4 rounded-pill" href="{{ url_for('student_ranking') }}">ترتيب الدفعة</a>
+                <a class="btn btn-custom-light btn-sm px-4 rounded-pill" href="{{ url_for('student_ranking') }}">ترتيب الدفعة</a>
             </div>
         </div>
     </nav>
@@ -60,7 +55,7 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             {% for category, message in messages %}
-              <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm border-0" role="alert">
+              <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm border-0 rounded-4" role="alert">
                 {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
               </div>
