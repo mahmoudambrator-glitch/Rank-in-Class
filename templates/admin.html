@@ -1,5 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
+<style>
+    .scrollable-card-body {
+        max-height: 400px;
+        overflow-y: auto;
+        border-radius: 8px;
+    }
+</style>
+
 <div class="row">
     <div class="col-12">
         <h2 class="mb-4">🛠️ لوحة التحكم المركزية الشاملة</h2>
@@ -117,9 +125,9 @@
     <div class="card-header bg-secondary text-white">
         <h4>🎓 إدارة طلاب الدفعة وتعديل الـ GPA</h4>
     </div>
-    <div class="card-body">
+    <div class="card-body scrollable-card-body p-2">
         <div class="table-responsive">
-            <table class="table table-bordered table-striped text-center align-middle">
+            <table class="table table-bordered table-striped text-center align-middle mb-0">
                 <thead>
                     <tr>
                         <th>الاسم ثلاثي</th>
@@ -157,9 +165,9 @@
     <div class="card-header bg-warning text-dark">
         <h4 class="mb-0">📋 سجل نشاط الطلاب (من قام بالاستعلام أو التسجيل)</h4>
     </div>
-    <div class="card-body">
+    <div class="card-body scrollable-card-body p-2">
         <div class="table-responsive">
-            <table class="table table-sm table-striped text-center align-middle">
+            <table class="table table-sm table-striped text-center align-middle mb-0">
                 <thead>
                     <tr>
                         <th>اسم الطالب</th>
@@ -204,27 +212,29 @@
             <button type="submit" class="btn btn-danger btn-sm">🗑️ تصفير كل سجلات الزيارات</button>
         </form>
 
-        <div class="table-responsive">
-            <table class="table table-sm table-striped text-center align-middle">
-                <thead>
-                    <tr>
-                        <th>نوع الزائر / الطالب</th>
-                        <th>رقم الـ IP</th>
-                        <th>الصفحة الزائرة</th>
-                        <th>الوقت والتاريخ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for visit in recent_visits %}
-                    <tr>
-                        <td><span class="badge bg-dark">{{ visit.visitor_type }}</span></td>
-                        <td>{{ visit.ip_address }}</td>
-                        <td><code>{{ visit.page_visited }}</code></td>
-                        <td>{{ visit.timestamp.strftime('%Y-%m-%d %I:%M %p') }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="scrollable-card-body p-1">
+            <div class="table-responsive">
+                <table class="table table-sm table-striped text-center align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>نوع الزائر / الطالب</th>
+                            <th>رقم الـ IP</th>
+                            <th>الصفحة الزائرة</th>
+                            <th>الوقت والتاريخ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for visit in recent_visits %}
+                        <tr>
+                            <td><span class="badge bg-dark">{{ visit.visitor_type }}</span></td>
+                            <td>{{ visit.ip_address }}</td>
+                            <td><code>{{ visit.page_visited }}</code></td>
+                            <td>{{ visit.timestamp.strftime('%Y-%m-%d %I:%M %p') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
