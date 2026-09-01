@@ -31,30 +31,18 @@
     }
 </style>
 
-<div class="row text-center mb-4">
+<div class="row text-center mb-5">
     <div class="col-12">
         <div class="p-3 welcome-card shadow-sm">
-            <h6 class="fw-bold text-secondary mb-1">مرحباً بك في مكتبة Ꭿ ᎷᏰ ᎡᎯ ᎿᏫᎡ[cite: 4]</h6>
-            <p class="text-muted small mb-0">اختر المادة الدراسية لعرض الملخصات والملفات المتاحة[cite: 4]</p>
+            <h6 class="fw-bold text-secondary mb-1">مرحباً بك في مكتبة Ꭿ ᎷᏰ ᎡᎯ ᎿᏫᎡ</h6>
+            <p class="text-muted small mb-0">اختر المادة الدراسية لعرض الملخصات والملفات المتاحة</p>
         </div>
     </div>
 </div>
 
-<!-- شريط البحث الفوري -->
-<div class="row mb-4">
-    <div class="col-md-6 mx-auto">
-        <div class="input-group shadow-sm rounded-pill overflow-hidden bg-white border">
-            <span class="input-group-text bg-white border-0 ps-3 text-muted">
-                <i class="bi bi-search"></i>
-            </span>
-            <input type="text" id="subjectSearchInput" class="form-control border-0 py-2 shadow-none" placeholder="ابحث عن اسم المادة...">
-        </div>
-    </div>
-</div>
-
-<div class="row g-4" id="subjectsGrid">
+<div class="row g-4">
     {% for sub in subjects %}
-    <div class="col-md-4 subject-item" data-name="{{ sub.name|lower }}">
+    <div class="col-md-4">
         <div class="card subject-card h-100 p-2">
             <div class="card-body d-flex flex-column justify-content-between p-3">
                 <div>
@@ -69,44 +57,11 @@
         </div>
     </div>
     {% else %}
-    <div class="col-12" id="noSubjectsMsg">
+    <div class="col-12">
         <div class="alert alert-light text-center border py-5 rounded-4 shadow-sm">
             <h5 class="text-muted mb-0">لا توجد مواد دراسية مضافة حتى الآن.</h5>
         </div>
     </div>
     {% endfor %}
 </div>
-
-<!-- رسالة في حال عدم وجود نتائج بحث مطابقة -->
-<div id="noSearchResults" class="text-center py-5 d-none">
-    <div class="alert alert-light border py-4 rounded-4 shadow-sm d-inline-block px-5">
-        <h6 class="text-muted mb-0">عذراً، لم نجد مادة مطابقة لبحثك.</h6>
-    </div>
-</div>
-
-<!-- سكربت البحث -->
-<script>
-    document.getElementById('subjectSearchInput').addEventListener('input', function() {
-        const query = this.value.trim().toLowerCase();
-        const subjectItems = document.querySelectorAll('.subject-item');
-        const noResultsDiv = document.getElementById('noSearchResults');
-        let visibleCount = 0;
-
-        subjectItems.forEach(item => {
-            const subjectName = item.getAttribute('data-name');
-            if (subjectName.includes(query)) {
-                item.style.display = 'block';
-                visibleCount++;
-            } else {
-                item.style.display = 'none';
-            }
-        });
-
-        if (visibleCount === 0 && subjectItems.length > 0) {
-            noResultsDiv.classList.remove('d-none');
-        } else {
-            noResultsDiv.classList.add('d-none');
-        }
-    });
-</script>
 {% endblock %}
