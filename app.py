@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import os
 from flask import (
@@ -23,6 +23,7 @@ if db_url and db_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url or 'sqlite:///library_and_ranking.db'
 app.config['SECRET_KEY'] = 'my_super_secret_combined_key'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
 db = SQLAlchemy(app)
 
@@ -78,7 +79,7 @@ with app.app_context():
 # تتبع الزيارات التلقائي
 @app.before_request
 def track_visit():
-    if not request.path.startswith('/static') and not request.path.startswith('/admin'):
+    if not request.path.startswith('/static') and not request.path.startswith('/admin') and 'favicon.ico' not in request.path:
         visitor_info = session.get('student_name', 'زائر عام')
         
         visit = VisitLog(
@@ -210,6 +211,7 @@ def student_ranking():
             nat_id = request.form.get("query_nat_id", "").strip()
             student = Student.query.filter_by(nat_id=nat_id).first()
             if student:
+                session.permanent = True
                 session['student_name'] = student.name
                 rank = Student.query.filter(Student.gpa > student.gpa).count() + 1
                 total = Student.query.count()
@@ -261,6 +263,7 @@ def student_ranking():
             db.session.add(log)
             db.session.commit()
             
+            session.permanent = True
             session['student_name'] = name
             
             rank = Student.query.filter(Student.gpa > gpa).count() + 1
