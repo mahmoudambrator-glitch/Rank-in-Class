@@ -87,7 +87,7 @@
             {% endfor %}
         </ul>
 
-        <!-- عرض جدول جميع الملفات المرفوعة وعدد مرات فتحها -->
+        <!-- عرض أول 8 ملفات مرفوعة في الصفحة الرئيسية -->
         <h5 class="mt-4">📁 تفاصيل الملفات المرفوعة وعدد المشاهدات:</h5>
         <div class="table-responsive">
             <table class="table table-bordered table-striped text-center align-middle">
@@ -101,7 +101,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for file in all_files %}
+                    {% for file in all_files[:8] %}
                     <tr>
                         <td>{{ file.title }}</td>
                         <td>{{ file.subject.name }}</td>
@@ -123,9 +123,9 @@
 <!-- إدارة الطلاب -->
 <div class="card mb-5 shadow-sm">
     <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-        <h4 class="mb-0">🎓 إدارة طلاب الدفعة وتعديل الـ GPA</h4>
+        <h4 class="mb-0">🎓 إدارة طلاب الدفعة وتعديل الـ GPA <span class="badge bg-light text-dark ms-2">إجمالي الطلاب: {{ students|length }}</span></h4>
         <button type="button" class="btn btn-light btn-sm text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#studentsModal">
-            🔍 عرض الكل
+            🔍 عرض الكل ({{ students|length }})
         </button>
     </div>
     <div class="card-body p-2">
@@ -140,7 +140,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for student in students %}
+                    <!-- عرض أول 8 طلاب فقط في الصفحة الرئيسية -->
+                    {% for student in students[:8] %}
                     <tr>
                         <td>{{ student.name }}</td>
                         <td>{{ student.nat_id }}</td>
@@ -155,6 +156,10 @@
                                 <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('حذف الطالب نهائياً؟')">حذف</button>
                             </form>
                         </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-muted">لا يوجد طلاب مسجلين حتى الآن.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -183,7 +188,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for activity in student_activities %}
+                    <!-- عرض أول 8 أنشطة فقط في الصفحة الرئيسية -->
+                    {% for activity in student_activities[:8] %}
                     <tr>
                         <td class="fw-bold">{{ activity.student_name }}</td>
                         <td>{{ activity.nat_id }}</td>
@@ -233,7 +239,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for visit in recent_visits %}
+                        <!-- عرض أول 8 زيارات فقط في الصفحة الرئيسية -->
+                        {% for visit in recent_visits[:8] %}
                         <tr>
                             <td>
                                 {% if visit.visitor_type == 'زائر عام' %}
@@ -258,6 +265,10 @@
                             </td>
                             <td>{{ visit.timestamp.strftime('%Y-%m-%d %I:%M %p') }}</td>
                         </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-muted">لا توجد زيارات مسجلة حتى الآن.</td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -272,10 +283,10 @@
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header bg-secondary text-white">
-                <h5 class="modal-title" id="studentsModalLabel">🎓 قائمة جميع طلاب الدفعة المسجلين</h5>
+                <h5 class="modal-title" id="studentsModalLabel">🎓 قائمة جميع طلاب الدفعة المسجلين (الإجمالي: {{ students|length }})</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body scrollable-card-body">
                 <div class="table-responsive">
                     <table class="table table-bordered table-striped text-center align-middle">
                         <thead>
@@ -321,7 +332,7 @@
                 <h5 class="modal-title" id="activitiesModalLabel">📋 سجل نشاط الطلاب الكامل</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body scrollable-card-body">
                 <div class="table-responsive">
                     <table class="table table-striped text-center align-middle">
                         <thead>
@@ -364,7 +375,7 @@
                 <h5 class="modal-title" id="visitsModalLabel">📊 سجل حركة الزيارات الكامل للموقع</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body scrollable-card-body">
                 <div class="table-responsive">
                     <table class="table table-striped text-center align-middle">
                         <thead>
