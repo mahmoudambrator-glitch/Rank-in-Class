@@ -122,8 +122,11 @@
 
 <!-- إدارة الطلاب -->
 <div class="card mb-5 shadow-sm">
-    <div class="card-header bg-secondary text-white">
-        <h4>🎓 إدارة طلاب الدفعة وتعديل الـ GPA</h4>
+    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">🎓 إدارة طلاب الدفعة وتعديل الـ GPA</h4>
+        <button type="button" class="btn btn-light btn-sm text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#studentsModal">
+            🔍 عرض الكل
+        </button>
     </div>
     <div class="card-body scrollable-card-body p-2">
         <div class="table-responsive">
@@ -162,8 +165,11 @@
 
 <!-- سجل نشاط الطلاب (الاستعلامات والتسجيلات) -->
 <div class="card shadow-sm mb-5">
-    <div class="card-header bg-warning text-dark">
+    <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
         <h4 class="mb-0">📋 سجل نشاط الطلاب (من قام بالاستعلام أو التسجيل)</h4>
+        <button type="button" class="btn btn-dark btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#activitiesModal">
+            🔍 عرض الكل
+        </button>
     </div>
     <div class="card-body scrollable-card-body p-2">
         <div class="table-responsive">
@@ -204,7 +210,10 @@
 <!-- سجل الزيارات -->
 <div class="card shadow-sm mb-5">
     <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-        <h4 class="mb-0">📊 سجل حركة الزيارات الأخيرة للموقع</h4>
+        <h4 class="mb-0">📊 سجل حركة الزيارات الأخيرة للموقع[cite: 5]</h4>
+        <button type="button" class="btn btn-light btn-sm text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#visitsModal">
+            🔍 عرض الكل
+        </button>
     </div>
     <div class="card-body">
         <!-- زر تصفير سجلات الزيارات -->
@@ -256,4 +265,149 @@
         </div>
     </div>
 </div>
+
+
+<!-- Modal عرض كل الطلاب -->
+<div class="modal fade" id="studentsModal" tabindex="-1" aria-labelledby="studentsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-secondary text-white">
+                <h5 class="modal-title" id="studentsModalLabel">🎓 قائمة جميع طلاب الدفعة المسجلين</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped text-center align-middle">
+                        <thead>
+                            <tr>
+                                <th>الاسم ثلاثي</th>
+                                <th>الرقم القومي</th>
+                                <th>الـ GPA</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr>
+                                <td>{{ student.name }}</td>
+                                <td>{{ student.nat_id }}</td>
+                                <td>
+                                    <form action="{{ url_for('update_student_gpa', id=student.id) }}" method="POST" class="d-inline-flex gap-1 justify-content-center">
+                                        <input type="number" step="0.01" name="gpa" value="{{ student.gpa }}" class="form-control form-control-sm" style="width: 90px;" required>
+                                        <button type="submit" class="btn btn-warning btn-sm">تحديث</button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form action="{{ url_for('delete_student', id=student.id) }}" method="POST" style="display:inline;">
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('حذف الطالب نهائياً؟')">حذف</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal عرض كل أنشطة الطلاب -->
+<div class="modal fade" id="activitiesModal" tabindex="-1" aria-labelledby="activitiesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="activitiesModalLabel">📋 سجل نشاط الطلاب الكامل</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-striped text-center align-middle">
+                        <thead>
+                            <tr>
+                                <th>اسم الطالب</th>
+                                <th>الرقم القومي</th>
+                                <th>نوع الإجراء</th>
+                                <th>الوقت والتاريخ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in student_activities %}
+                            <tr>
+                                <td class="fw-bold">{{ activity.student_name }}</td>
+                                <td>{{ activity.nat_id }}</td>
+                                <td>
+                                    {% if activity.action_type == "تسجيل جديد في الدفعة" %}
+                                        <span class="badge bg-success">تسجيل جديد</span>
+                                    {% else %}
+                                        <span class="badge bg-primary">استعلام عن الترتيب</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ activity.timestamp.strftime('%Y-%m-%d %I:%M %p') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal عرض كل الزيارات -->
+<div class="modal fade" id="visitsModal" tabindex="-1" aria-labelledby="visitsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="visitsModalLabel">📊 سجل حركة الزيارات الكامل للموقع</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-striped text-center align-middle">
+                        <thead>
+                            <tr>
+                                <th>نوع الزائر / الطالب</th>
+                                <th>رقم الـ IP</th>
+                                <th>الصفحة الزائرة</th>
+                                <th>الوقت والتاريخ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for visit in recent_visits %}
+                            <tr>
+                                <td>
+                                    {% if visit.visitor_type == 'زائر عام' %}
+                                        <span class="badge bg-secondary opacity-75">زائر عام</span>
+                                    {% else %}
+                                        <span class="badge bg-dark">{{ visit.visitor_type }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ visit.ip_address }}</td>
+                                <td>
+                                    {% if visit.page_visited == '/' %}
+                                        <span class="badge bg-primary">الصفحة الرئيسية للمكتبة</span>
+                                    {% elif visit.page_visited.startswith('/subject/') %}
+                                        <span class="badge bg-success">استعراض مادة دراسية</span>
+                                    {% elif visit.page_visited.startswith('/open_file/') %}
+                                        <span class="badge bg-info text-dark">فتح / تحميل ملف دراسي</span>
+                                    {% elif visit.page_visited == '/ranking' %}
+                                        <span class="badge bg-warning text-dark">منصة ترتيب الدفعة</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ visit.page_visited }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ visit.timestamp.strftime('%Y-%m-%d %I:%M %p') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
