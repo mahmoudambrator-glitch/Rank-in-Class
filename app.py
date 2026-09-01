@@ -76,19 +76,22 @@ with app.app_context():
     except FileExistsError:
         pass
 
-# تتبع الزيارات التلقائي
+# تتبع الزيارات التلقائي (مرة واحدة فقط لكل جلسة مستخدم)
 @app.before_request
 def track_visit():
     if not request.path.startswith('/static') and not request.path.startswith('/admin') and 'favicon.ico' not in request.path:
-        visitor_info = session.get('student_name', 'زائر عام')
-        
-        visit = VisitLog(
-            visitor_type=visitor_info,
-            ip_address=request.remote_addr, 
-            page_visited=request.path
-        )
-        db.session.add(visit)
-        db.session.commit()
+        if not session.get('visit_recorded'):
+            visitor_info = session.get('student_name', 'زائر عام')
+            
+            visit = VisitLog(
+                visitor_type=visitor_info,
+                ip_address=request.remote_addr, 
+                page_visited=request.path
+            )
+            db.session.add(visit)
+            db.session.commit()
+            
+            session['visit_recorded'] = True
 
 # --- مسارات المكتبة ---
 
