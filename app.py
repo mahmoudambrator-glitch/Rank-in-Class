@@ -76,7 +76,7 @@ with app.app_context():
     except FileExistsError:
         pass
 
-# تتبع الزيارات التلقائي (مرة واحدة فقط لكل جلسة مستخدم)
+# تتبع الزيارة العامة للموقع (مرة واحدة فقط لكل جلسة مستخدم)
 @app.before_request
 def track_visit():
     if not request.path.startswith('/static') and not request.path.startswith('/admin') and 'favicon.ico' not in request.path:
@@ -103,13 +103,34 @@ def home():
 @app.route('/subject/<int:subject_id>')
 def subject_detail(subject_id):
     subject = Subject.query.get_or_404(subject_id)
+    
+    # تسجيل زيارة صفحة المادة في السجل
+    visitor_info = session.get('student_name', 'زائر عام')
+    visit = VisitLog(
+        visitor_type=visitor_info,
+        ip_address=request.remote_addr,
+        page_visited=f'/subject/{subject_id} ({subject.name})'
+    )
+    db.session.add(visit)
+    db.session.commit()
+
     return render_template('subject_detail.html', subject=subject)
 
 @app.route('/open_file/<int:file_id>')
 def open_file(file_id):
     file_item = MaterialFile.query.get_or_404(file_id)
     file_item.views_count = (file_item.views_count or 0) + 1
+    
+    # تسجيل زيارة فتح الملف في سجل الزيارات العام
+    visitor_info = session.get('student_name', 'زائر عام')
+    visit = VisitLog(
+        visitor_type=visitor_info,
+        ip_address=request.remote_addr,
+        page_visited=f'/open_file/{file_id} ({file_item.title})'
+    )
+    db.session.add(visit)
     db.session.commit()
+
     return redirect(url_for('static', filename=file_item.file_path))
 
 # --- لوحة التحكم المركزية ---
@@ -207,6 +228,17 @@ def delete_file(file_id):
 @app.route("/ranking", methods=["GET", "POST"])
 def student_ranking():
     result = None
+    
+    # تسجيل زيارة صفحة الترتيب في سجل الزيارات
+    visitor_info = session.get('student_name', 'زائر عام')
+    visit = VisitLog(
+        visitor_type=visitor_info,
+        ip_address=request.remote_addr,
+        page_visited='/ranking (منصة الترتيب)'
+    )
+    db.session.add(visit)
+    db.session.commit()
+
     if request.method == "POST":
         action = request.form.get("action_type")
         
@@ -220,6 +252,7 @@ def student_ranking():
                 total = Student.query.count()
                 result = {"name": student.name, "rank": rank, "total": total}
                 
+                # تسجيل نشاط الاستعلام
                 log = StudentActivityLog(
                     student_name=student.name,
                     nat_id=nat_id,
@@ -258,6 +291,7 @@ def student_ranking():
             new_student = Student(nat_id=nat_id, name=name, gpa=gpa, status="approved")
             db.session.add(new_student)
             
+            # تسجيل نشاط التسجيل الجديد
             log = StudentActivityLog(
                 student_name=name,
                 nat_id=nat_id,
