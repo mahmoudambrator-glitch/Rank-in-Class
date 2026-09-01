@@ -209,7 +209,7 @@
     <div class="card-body">
         <!-- زر تصفير سجلات الزيارات -->
         <form action="{{ url_for('clear_visits') }}" method="POST" class="mb-3" onsubmit="return confirm('هل أنت متأكد من تصفير جميع سجلات الزيارات؟');">
-            <button type="submit" class="btn btn-danger btn-sm">🗑️ تصفير كل سجلات الزيارات</button>
+            <button type="submit" class="btn btn-danger btn-sm">🗑️ تصفير كل سجلات الزيارات[cite: 5]</button>
         </form>
 
         <div class="scrollable-card-body p-1">
@@ -217,18 +217,36 @@
                 <table class="table table-sm table-striped text-center align-middle mb-0">
                     <thead>
                         <tr>
-                            <th>نوع الزائر / الطالب</th>
-                            <th>رقم الـ IP</th>
-                            <th>الصفحة الزائرة</th>
-                            <th>الوقت والتاريخ</th>
+                            <th>نوع الزائر / الطالب[cite: 5]</th>
+                            <th>رقم الـ IP[cite: 5]</th>
+                            <th>الصفحة الزائرة[cite: 5]</th>
+                            <th>الوقت والتاريخ[cite: 5]</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for visit in recent_visits %}
                         <tr>
-                            <td><span class="badge bg-dark">{{ visit.visitor_type }}</span></td>
+                            <td>
+                                {% if visit.visitor_type == 'زائر عام' %}
+                                    <span class="badge bg-secondary opacity-75">زائر عام</span>
+                                {% else %}
+                                    <span class="badge bg-dark">{{ visit.visitor_type }}</span>
+                                {% endif %}
+                            </td>
                             <td>{{ visit.ip_address }}</td>
-                            <td><code>{{ visit.page_visited }}</code></td>
+                            <td>
+                                {% if visit.page_visited == '/' %}
+                                    <span class="badge bg-primary">الصفحة الرئيسية للمكتبة</span>
+                                {% elif visit.page_visited.startswith('/subject/') %}
+                                    <span class="badge bg-success">استعراض مادة دراسية</span>
+                                {% elif visit.page_visited.startswith('/open_file/') %}
+                                    <span class="badge bg-info text-dark">فتح / تحميل ملف دراسي</span>
+                                {% elif visit.page_visited == '/ranking' %}
+                                    <span class="badge bg-warning text-dark">منصة ترتيب الدفعة</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ visit.page_visited }}</span>
+                                {% endif %}
+                            </td>
                             <td>{{ visit.timestamp.strftime('%Y-%m-%d %I:%M %p') }}</td>
                         </tr>
                         {% endfor %}
