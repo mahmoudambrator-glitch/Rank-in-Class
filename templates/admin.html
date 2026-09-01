@@ -216,7 +216,7 @@
 <!-- سجل الزيارات -->
 <div class="card shadow-sm mb-5">
     <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-        <h4 class="mb-0">📊 سجل حركة الزيارات الأخيرة للموقع[cite: 5]</h4>
+        <h4 class="mb-0">📊 سجل حركة الزيارات الأخيرة للموقع</h4>
         <button type="button" class="btn btn-light btn-sm text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#visitsModal">
             🔍 عرض الكل
         </button>
@@ -224,7 +224,7 @@
     <div class="card-body">
         <!-- زر تصفير سجلات الزيارات -->
         <form action="{{ url_for('clear_visits') }}" method="POST" class="mb-3" onsubmit="return confirm('هل أنت متأكد من تصفير جميع سجلات الزيارات؟');">
-            <button type="submit" class="btn btn-danger btn-sm">🗑️ تصفير كل سجلات الزيارات[cite: 5]</button>
+            <button type="submit" class="btn btn-danger btn-sm">🗑️ تصفير كل سجلات الزيارات</button>
         </form>
 
         <div class="p-1">
@@ -232,10 +232,10 @@
                 <table class="table table-sm table-striped text-center align-middle mb-0">
                     <thead>
                         <tr>
-                            <th>نوع الزائر / الطالب[cite: 5]</th>
-                            <th>رقم الـ IP[cite: 5]</th>
-                            <th>الصفحة الزائرة[cite: 5]</th>
-                            <th>الوقت والتاريخ[cite: 5]</th>
+                            <th>نوع الزائر / الطالب</th>
+                            <th>رقم الـ IP</th>
+                            <th>الصفحة الزائرة</th>
+                            <th>الوقت والتاريخ</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -257,7 +257,7 @@
                                     <span class="badge bg-success">استعراض مادة دراسية</span>
                                 {% elif visit.page_visited.startswith('/open_file/') %}
                                     <span class="badge bg-info text-dark">فتح / تحميل ملف دراسي</span>
-                                {% elif visit.page_visited == '/ranking' %}
+                                {% elif visit.page_visited.startswith('/ranking') %}
                                     <span class="badge bg-warning text-dark">منصة ترتيب الدفعة</span>
                                 {% else %}
                                     <span class="badge bg-secondary">{{ visit.page_visited }}</span>
@@ -404,7 +404,7 @@
                                         <span class="badge bg-success">استعراض مادة دراسية</span>
                                     {% elif visit.page_visited.startswith('/open_file/') %}
                                         <span class="badge bg-info text-dark">فتح / تحميل ملف دراسي</span>
-                                    {% elif visit.page_visited == '/ranking' %}
+                                    {% elif visit.page_visited.startswith('/ranking') %}
                                         <span class="badge bg-warning text-dark">منصة ترتيب الدفعة</span>
                                     {% else %}
                                         <span class="badge bg-secondary">{{ visit.page_visited }}</span>
