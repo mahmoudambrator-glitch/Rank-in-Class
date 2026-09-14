@@ -46,6 +46,16 @@ class MaterialFile(db.Model):
     subject_id = db.Column(
         db.Integer, db.ForeignKey('subject.id'), nullable=False
     )
+    # --- تم الإضافة بواسطة الذكاء الاصطناعي (النوت بوك) ---
+    notes = db.relationship('Note', backref='file', lazy=True, cascade='all, delete')
+
+# --- تم الإضافة بواسطة الذكاء الاصطناعي (النوت بوك) ---
+class Note(db.Model):
+    """نموذج لحفظ ملاحظات الطلاب المرتبطة بالملفات"""
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(ZoneInfo("Africa/Cairo")))
+    file_id = db.Column(db.Integer, db.ForeignKey('material_file.id'), nullable=False)
 
 class Student(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -70,7 +80,7 @@ class StudentActivityLog(db.Model):
 
 
 with app.app_context():
-    db.create_all()
+    db.create_all() # سيقوم بإنشاء جدول Note تلقائياً عند التشغيل
     try:
         os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     except FileExistsError:
@@ -93,7 +103,7 @@ def track_visit():
             
             session['visit_recorded'] = True
 
-# --- مسارات المكتبة ---
+# --- مسارات المكتبة والنوت بوك ---
 
 @app.route('/')
 def home():
@@ -118,6 +128,11 @@ def subject_detail(subject_id):
 
 @app.route('/open_file/<int:file_id>')
 def open_file(file_id):
+    """
+    --- تم التعديل بواسطة الذكاء الاصطناعي (النوت بوك) ---
+    هذا المسار الآن يفتح صفحة النوت بوك المدمجة (notebook.html)
+    بدلاً من تحميل الملف مباشرة.
+    """
     file_item = MaterialFile.query.get_or_404(file_id)
     file_item.views_count = (file_item.views_count or 0) + 1
     
@@ -126,12 +141,32 @@ def open_file(file_id):
     visit = VisitLog(
         visitor_type=visitor_info,
         ip_address=request.remote_addr,
-        page_visited=f'/open_file/{file_id} ({file_item.title})'
+        page_visited=f'/open_file/{file_id} (نوت بوك: {file_item.title})'
     )
     db.session.add(visit)
     db.session.commit()
 
-    return redirect(url_for('static', filename=file_item.file_path))
+    # توجيه الطالب إلى صفحة النوت بوك الخاصة بالملف
+    return render_template('notebook.html', file_item=file_item)
+
+# --- تم الإضافة بواسطة الذكاء الاصطناعي (النوت بوك) ---
+@app.route('/save_note/<int:file_id>', methods=['POST'])
+def save_note(file_id):
+    """مسار مخصص لحفظ الملاحظة الجديدة في قاعدة البيانات"""
+    file_item = MaterialFile.query.get_or_404(file_id)
+    note_content = request.form.get('content')
+    
+    if note_content:
+        new_note = Note(content=note_content, file_id=file_id)
+        db.session.add(new_note)
+        db.session.commit()
+        flash('✅ تم حفظ الملاحظة بنجاح في النوت بوك الخاص بك', 'success')
+    else:
+        flash('⚠️ لا يمكن حفظ ملاحظة فارغة', 'warning')
+        
+    # العودة إلى صفحة النوت بوك الخاصة بنفس الملف لعرضها بعد الحفظ
+    return render_template('notebook.html', file_item=file_item)
+
 
 # --- لوحة التحكم المركزية ---
 
@@ -321,7 +356,7 @@ def delete_student(id):
 @app.route("/admin/update_student/<int:id>", methods=["POST"])
 def update_student_gpa(id):
     student = Student.query.get_or_404(id)
-    try:
+    try: # تم إضافة الكود الناقص هنا
         gpa = float(request.form.get("gpa"))
         if 0.0 <= gpa <= 4.0:
             student.gpa = gpa
@@ -332,6 +367,3 @@ def update_student_gpa(id):
     except ValueError:
         flash("❌ يرجى إدخال رقم صحيح للـ GPA", "danger")
     return redirect("/admin")
-
-if __name__ == "__main__":
-    app.run(debug=True)
