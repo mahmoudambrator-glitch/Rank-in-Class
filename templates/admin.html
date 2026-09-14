@@ -51,8 +51,8 @@
             <button type="submit" class="btn btn-success">إضافة المادة</button>
         </form>
 
-        <form action="{{ url_for('add_file') }}" method="POST" enctype="multipart/form-data" class="mb-4 p-3 bg-light rounded">
-            <h5>رفع ملف / ملخص للمادة</h5>
+        <form action="{{ url_for('add_file') }}" method="POST" class="mb-4 p-3 bg-light rounded">
+            <h5>إضافة رابط ملف / ملخص جديد (Google Drive)</h5>
             <div class="mb-3">
                 <select name="subject_id" class="form-control" required>
                     <option value="">اختر المادة</option>
@@ -70,9 +70,12 @@
                 </select>
             </div>
             <div class="mb-3">
-                <input type="file" name="file" class="form-control" required>
+                <input type="text" name="title" class="form-control" placeholder="عنوان الملف أو الملزمة (مثلاً: قواعد النحو المحاضرة الأولى)" required>
             </div>
-            <button type="submit" class="btn btn-primary">رفع الملف</button>
+            <div class="mb-3">
+                <input type="url" name="drive_link" class="form-control" placeholder="الصق رابط مشاركة جوجل درايف هنا (Google Drive Link)" required>
+            </div>
+            <button type="submit" class="btn btn-primary">إضافة رابط الملف</button>
         </form>
 
         <h5>المواد الحالية والملفات:</h5>
@@ -256,7 +259,7 @@
                                 {% elif visit.page_visited.startswith('/subject/') %}
                                     <span class="badge bg-success">استعراض مادة دراسية</span>
                                 {% elif visit.page_visited.startswith('/open_file/') %}
-                                    <span class="badge bg-info text-dark">فتح / تحميل ملف دراسي</span>
+                                    <span class="badge bg-info text-dark">عرض ملف دراسي</span>
                                 {% elif visit.page_visited.startswith('/ranking') %}
                                     <span class="badge bg-warning text-dark">منصة ترتيب الدفعة</span>
                                 {% else %}
@@ -403,7 +406,7 @@
                                     {% elif visit.page_visited.startswith('/subject/') %}
                                         <span class="badge bg-success">استعراض مادة دراسية</span>
                                     {% elif visit.page_visited.startswith('/open_file/') %}
-                                        <span class="badge bg-info text-dark">فتح / تحميل ملف دراسي</span>
+                                        <span class="badge bg-info text-dark">عرض ملف دراسي</span>
                                     {% elif visit.page_visited.startswith('/ranking') %}
                                         <span class="badge bg-warning text-dark">منصة ترتيب الدفعة</span>
                                     {% else %}
