@@ -346,4 +346,24 @@ def student_ranking():
     return render_template("ranking.html", result=result)
 
 @app.route("/admin/delete_student/<int:id>", methods=["POST"])
-def delete
+def delete_student(id):
+    student = Student.query.get_or_404(id)
+    db.session.delete(student)
+    db.session.commit()
+    flash("🗑️ تم حذف الطالب بنجاح!", "success")
+    return redirect("/admin")
+
+@app.route("/admin/update_student/<int:id>", methods=["POST"])
+def update_student_gpa(id):
+    student = Student.query.get_or_404(id)
+    try:
+        gpa = float(request.form.get("gpa"))
+        if 0.0 <= gpa <= 4.0:
+            student.gpa = gpa
+            db.session.commit()
+            flash("✅ تم تحديث الـ GPA بنجاح!", "success")
+        else:
+            flash("❌ القيمة يجب أن تكون بين 0.00 و 4.00", "danger")
+    except ValueError:
+        flash("❌ يرجى إدخال رقم صحيح للـ GPA", "danger")
+    return redirect("/admin")
