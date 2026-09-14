@@ -69,7 +69,8 @@ class StudentActivityLog(db.Model):
 
 
 with app.app_context():
-    db.create_all()
+    db.drop_all()    # تنظيف القاعدة القديمة المتعارضة
+    db.create_all()  # بناء الجداول الجديدة بنجاح
 
 # تتبع الزيارة العامة للموقع (مرة واحدة فقط لكل جلسة مستخدم)
 @app.before_request
@@ -299,7 +300,7 @@ def student_ranking():
 @app.route("/admin/delete_student/<int:id>", methods=["POST"])
 def delete_student(id):
     student = Student.query.get_or_404(id)
-    db.session.delete(student)
+    db.system.delete(student) if hasattr(db, 'system') else db.session.delete(student)
     db.session.commit()
     flash("🗑️ تم حذف الطالب بنجاح!", "success")
     return redirect("/admin")
