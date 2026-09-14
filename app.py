@@ -22,7 +22,6 @@ if db_url and db_url.startswith("postgres://"):
 
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url or 'sqlite:///library_and_ranking.db'
 app.config['SECRET_KEY'] = 'my_super_secret_combined_key'
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
 db = SQLAlchemy(app)
@@ -41,21 +40,11 @@ class MaterialFile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(150), nullable=False)
     file_type = db.Column(db.String(50))
-    file_path = db.Column(db.String(300), nullable=False)
+    file_path = db.Column(db.String(500), nullable=False)  # مخصص لتخزين رابط Google Drive
     views_count = db.Column(db.Integer, default=0)
     subject_id = db.Column(
         db.Integer, db.ForeignKey('subject.id'), nullable=False
     )
-    # --- تم الإضافة بواسطة الذكاء الاصطناعي (النوت بوك) ---
-    notes = db.relationship('Note', backref='file', lazy=True, cascade='all, delete')
-
-# --- تم الإضافة بواسطة الذكاء الاصطناعي (النوت بوك) ---
-class Note(db.Model):
-    """نموذج لحفظ ملاحظات الطلاب المرتبطة بالملفات"""
-    id = db.Column(db.Integer, primary_key=True)
-    content = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(ZoneInfo("Africa/Cairo")))
-    file_id = db.Column(db.Integer, db.ForeignKey('material_file.id'), nullable=False)
 
 class Student(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -80,11 +69,7 @@ class StudentActivityLog(db.Model):
 
 
 with app.app_context():
-    db.create_all() # سيقوم بإنشاء جدول Note تلقائياً عند التشغيل
-    try:
-        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-    except FileExistsError:
-        pass
+    db.create_all()
 
 # تتبع الزيارة العامة للموقع (مرة واحدة فقط لكل جلسة مستخدم)
 @app.before_request
@@ -103,7 +88,7 @@ def track_visit():
             
             session['visit_recorded'] = True
 
-# --- مسارات المكتبة والنوت بوك ---
+# --- مسارات المكتبة وعرض الملفات ---
 
 @app.route('/')
 def home():
@@ -128,11 +113,7 @@ def subject_detail(subject_id):
 
 @app.route('/open_file/<int:file_id>')
 def open_file(file_id):
-    """
-    --- تم التعديل بواسطة الذكاء الاصطناعي (النوت بوك) ---
-    هذا المسار الآن يفتح صفحة النوت بوك المدمجة (notebook.html)
-    بدلاً من تحميل الملف مباشرة.
-    """
+    """فتح صفحة عرض ملف جوجل درايف للمادة"""
     file_item = MaterialFile.query.get_or_404(file_id)
     file_item.views_count = (file_item.views_count or 0) + 1
     
@@ -141,30 +122,12 @@ def open_file(file_id):
     visit = VisitLog(
         visitor_type=visitor_info,
         ip_address=request.remote_addr,
-        page_visited=f'/open_file/{file_id} (نوت بوك: {file_item.title})'
+        page_visited=f'/open_file/{file_id} (عرض: {file_item.title})'
     )
     db.session.add(visit)
     db.session.commit()
 
-    # توجيه الطالب إلى صفحة النوت بوك الخاصة بالملف
-    return render_template('notebook.html', file_item=file_item)
-
-# --- تم الإضافة بواسطة الذكاء الاصطناعي (النوت بوك) ---
-@app.route('/save_note/<int:file_id>', methods=['POST'])
-def save_note(file_id):
-    """مسار مخصص لحفظ الملاحظة الجديدة في قاعدة البيانات"""
-    file_item = MaterialFile.query.get_or_404(file_id)
-    note_content = request.form.get('content')
-    
-    if note_content:
-        new_note = Note(content=note_content, file_id=file_id)
-        db.session.add(new_note)
-        db.session.commit()
-        flash('✅ تم حفظ الملاحظة بنجاح في النوت بوك الخاص بك', 'success')
-    else:
-        flash('⚠️ لا يمكن حفظ ملاحظة فارغة', 'warning')
-        
-    # العودة إلى صفحة النوت بوك الخاصة بنفس الملف لعرضها بعد الحفظ
+    # توجيه الطالب إلى صفحة العرض المباشر عبر الدرايف
     return render_template('notebook.html', file_item=file_item)
 
 
@@ -214,25 +177,19 @@ def add_subject():
 def add_file():
     file_type = request.form.get('file_type')
     subject_id = request.form.get('subject_id')
-    uploaded_file = request.files.get('file')
+    title = request.form.get('title')
+    drive_link = request.form.get('drive_link')
 
-    if subject_id and uploaded_file:
-        filename = uploaded_file.filename
-        upload_folder = os.path.abspath(app.config['UPLOAD_FOLDER'])
-        os.makedirs(upload_folder, exist_ok=True)
-        
-        save_path = os.path.join(upload_folder, filename)
-        uploaded_file.save(save_path)
-
+    if subject_id and drive_link and title:
         new_file = MaterialFile(
-            title=filename,
+            title=title,
             file_type=file_type,
-            file_path=f'uploads/{filename}',
+            file_path=drive_link,
             subject_id=subject_id,
         )
         db.session.add(new_file)
         db.session.commit()
-        flash('تم رفع الملف بنجاح', 'success')
+        flash('تم إضافة رابط الملف بنجاح', 'success')
 
     return redirect(url_for('admin'))
 
@@ -247,12 +204,6 @@ def delete_subject(subject_id):
 @app.route('/admin/delete_file/<int:file_id>', methods=['POST'])
 def delete_file(file_id):
     file_item = MaterialFile.query.get_or_404(file_id)
-    try:
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], os.path.basename(file_item.file_path))
-        if os.path.exists(file_path):
-            os.remove(file_path)
-    except:
-        pass
     db.session.delete(file_item)
     db.session.commit()
     flash('تم حذف الملف بنجاح', 'success')
@@ -367,3 +318,6 @@ def update_student_gpa(id):
     except ValueError:
         flash("❌ يرجى إدخال رقم صحيح للـ GPA", "danger")
     return redirect("/admin")
+
+if __name__ == '__main__':
+    app.run(debug=True)
