@@ -19,10 +19,12 @@
                     <div>
                         <span class="badge bg-secondary me-2">{{ file.file_type }}</span>
                         <strong class="fs-5">{{ file.title }}</strong>
+                        <small class="text-muted d-block mt-1">المشاهدات: {{ file.views_count or 0 }}</small>
                     </div>
                     <div>
+                        <!-- تم تعديل هذا الرابط ليفتح النوت بوك الداخلي بدلاً من الفتح المباشر -->
                         <a href="{{ url_for('open_file', file_id=file.id) }}" class="btn btn-outline-primary btn-sm px-4 fw-bold">
-                            عرض الملف
+                            فتح في النوت بوك الداخلي
                         </a>
                     </div>
                 </div>
