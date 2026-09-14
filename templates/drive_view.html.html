@@ -22,16 +22,16 @@
                         <i class="bi bi-file-earmark-pdf-fill text-danger"></i> {{ file_item.title }}
                     </h4>
                     <div>
-                        <!-- زر فتح أو تحميل مباشر من الدرايف -->
-                        <a href="{{ file_item.file_path }}" target="_blank" class="btn btn-primary btn-sm fw-bold px-3">
-                            <i class="bi bi-box-arrow-up-right"></i> فتح في تطبيق الدرايف
+                        <!-- زر التحميل أو المعاينة المباشرة للملف المحلي -->
+                        <a href="/{{ file_item.file_path }}" target="_blank" class="btn btn-primary btn-sm fw-bold px-3">
+                            <i class="bi bi-download"></i> تحميل / فتح الملف
                         </a>
                     </div>
                 </div>
                 
-                <!-- إطار عرض جوجل درايف (يعمل بكفاءة مطلقة على الموبايل والكمبيوتر) -->
+                <!-- إطار عرض الملف المحلي (PDF أو مستند) -->
                 <div class="card-body p-0 bg-light" style="height: 80vh; min-height: 600px;">
-                    <iframe src="{{ file_item.file_path }}" 
+                    <iframe src="/{{ file_item.file_path }}" 
                             width="100%" 
                             height="100%" 
                             style="border: none;" 
