@@ -133,8 +133,8 @@ def open_file(file_id):
     db.session.add(visit)
     db.session.commit()
 
-    # توجيه الطالب إلى صفحة العرض المباشر للملف المحلي
-    return render_template('notebook.html', file_item=file_item)
+    # توجيه الطالب إلى صفحة العرض المباشر بالاسم الفعلي للـ template
+    return render_template('drive_view.html.html', file_item=file_item)
 
 
 # --- لوحة التحكم المركزية ---
