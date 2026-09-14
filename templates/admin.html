@@ -51,8 +51,9 @@
             <button type="submit" class="btn btn-success">إضافة المادة</button>
         </form>
 
-        <form action="{{ url_for('add_file') }}" method="POST" class="mb-4 p-3 bg-light rounded">
-            <h5>إضافة رابط ملف / ملخص جديد (Google Drive)</h5>
+        <!-- نموذج رفع الملف محلياً -->
+        <form action="{{ url_for('add_file') }}" method="POST" enctype="multipart/form-data" class="mb-4 p-3 bg-light rounded">
+            <h5>رفع ملف / ملخص جديد من جهازك</h5>
             <div class="mb-3">
                 <select name="subject_id" class="form-control" required>
                     <option value="">اختر المادة</option>
@@ -73,9 +74,10 @@
                 <input type="text" name="title" class="form-control" placeholder="عنوان الملف أو الملزمة (مثلاً: قواعد النحو المحاضرة الأولى)" required>
             </div>
             <div class="mb-3">
-                <input type="url" name="drive_link" class="form-control" placeholder="الصق رابط مشاركة جوجل درايف هنا (Google Drive Link)" required>
+                <label class="form-label text-muted">اختر الملف من جهازك (PDF أو صور أو مستندات):</label>
+                <input type="file" name="file" class="form-control" required>
             </div>
-            <button type="submit" class="btn btn-primary">إضافة رابط الملف</button>
+            <button type="submit" class="btn btn-primary">رفع الملف الآن</button>
         </form>
 
         <h5>المواد الحالية والملفات:</h5>
@@ -143,7 +145,6 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- عرض أول 8 طلاب فقط في الصفحة الرئيسية -->
                     {% for student in students[:8] %}
                     <tr>
                         <td>{{ student.name }}</td>
@@ -171,7 +172,7 @@
     </div>
 </div>
 
-<!-- سجل نشاط الطلاب (الاستعلامات والتسجيلات) -->
+<!-- سجل نشاط الطلاب -->
 <div class="card shadow-sm mb-5">
     <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
         <h4 class="mb-0">📋 سجل نشاط الطلاب (من قام بالاستعلام أو التسجيل)</h4>
@@ -191,7 +192,6 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- عرض أول 8 أنشطة فقط في الصفحة الرئيسية -->
                     {% for activity in student_activities[:8] %}
                     <tr>
                         <td class="fw-bold">{{ activity.student_name }}</td>
@@ -225,7 +225,6 @@
         </button>
     </div>
     <div class="card-body">
-        <!-- زر تصفير سجلات الزيارات -->
         <form action="{{ url_for('clear_visits') }}" method="POST" class="mb-3" onsubmit="return confirm('هل أنت متأكد من تصفير جميع سجلات الزيارات؟');">
             <button type="submit" class="btn btn-danger btn-sm">🗑️ تصفير كل سجلات الزيارات</button>
         </form>
@@ -242,7 +241,6 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- عرض أول 8 زيارات فقط في الصفحة الرئيسية -->
                         {% for visit in recent_visits[:8] %}
                         <tr>
                             <td>
@@ -279,7 +277,6 @@
         </div>
     </div>
 </div>
-
 
 <!-- Modal عرض كل الطلاب -->
 <div class="modal fade" id="studentsModal" tabindex="-1" aria-labelledby="studentsModalLabel" aria-hidden="true">
@@ -326,7 +323,6 @@
     </div>
 </div>
 
-
 <!-- Modal عرض كل أنشطة الطلاب -->
 <div class="modal fade" id="activitiesModal" tabindex="-1" aria-labelledby="activitiesModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
@@ -368,7 +364,6 @@
         </div>
     </div>
 </div>
-
 
 <!-- Modal عرض كل الزيارات -->
 <div class="modal fade" id="visitsModal" tabindex="-1" aria-labelledby="visitsModalLabel" aria-hidden="true">
