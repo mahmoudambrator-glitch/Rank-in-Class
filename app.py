@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import os
+from werkzeug.utils import secure_filename
 from flask import (
     Flask,
     abort,
@@ -14,6 +15,10 @@ from flask import (
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
+
+# إعداد مجلد رفع الملفات محلياً
+UPLOAD_FOLDER = 'static/uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # إعداد قاعدة البيانات وتوافقها مع المحلي و Render
 db_url = os.environ.get('DATABASE_URL')
@@ -40,7 +45,7 @@ class MaterialFile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(150), nullable=False)
     file_type = db.Column(db.String(50))
-    file_path = db.Column(db.String(500), nullable=False)  # مخصص لتخزين رابط Google Drive
+    file_path = db.Column(db.String(500), nullable=False)  # مخصص لتخزين مسار الملف المحلي
     views_count = db.Column(db.Integer, default=0)
     subject_id = db.Column(
         db.Integer, db.ForeignKey('subject.id'), nullable=False
@@ -114,7 +119,7 @@ def subject_detail(subject_id):
 
 @app.route('/open_file/<int:file_id>')
 def open_file(file_id):
-    """فتح صفحة عرض ملف جوجل درايف للمادة"""
+    """فتح ومعاينة الملف المحلي للمادة"""
     file_item = MaterialFile.query.get_or_404(file_id)
     file_item.views_count = (file_item.views_count or 0) + 1
     
@@ -128,7 +133,7 @@ def open_file(file_id):
     db.session.add(visit)
     db.session.commit()
 
-    # توجيه الطالب إلى صفحة العرض المباشر عبر الدرايف
+    # توجيه الطالب إلى صفحة العرض المباشر للملف المحلي
     return render_template('notebook.html', file_item=file_item)
 
 
@@ -179,18 +184,28 @@ def add_file():
     file_type = request.form.get('file_type')
     subject_id = request.form.get('subject_id')
     title = request.form.get('title')
-    drive_link = request.form.get('drive_link')
+    
+    # التأكد من وجود مجلد الرفع
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
 
-    if subject_id and drive_link and title:
-        new_file = MaterialFile(
-            title=title,
-            file_type=file_type,
-            file_path=drive_link,
-            subject_id=subject_id,
-        )
-        db.session.add(new_file)
-        db.session.commit()
-        flash('تم إضافة رابط الملف بنجاح', 'success')
+    if 'file' in request.files:
+        file = request.files['file']
+        if file and file.filename != '':
+            filename = secure_filename(file.filename)
+            filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
+
+            new_file = MaterialFile(
+                title=title,
+                file_type=file_type,
+                file_path=file_path,
+                subject_id=subject_id,
+            )
+            db.session.add(new_file)
+            db.session.commit()
+            flash('تم رفع الملف بنجاح!', 'success')
 
     return redirect(url_for('admin'))
 
@@ -205,6 +220,13 @@ def delete_subject(subject_id):
 @app.route('/admin/delete_file/<int:file_id>', methods=['POST'])
 def delete_file(file_id):
     file_item = MaterialFile.query.get_or_404(file_id)
+    # حذف الملف الفعلي من السيرفر إن وجد
+    if file_item.file_path and os.path.exists(file_item.file_path):
+        try:
+            os.remove(file_item.file_path)
+        except:
+            pass
+            
     db.session.delete(file_item)
     db.session.commit()
     flash('تم حذف الملف بنجاح', 'success')
@@ -216,7 +238,6 @@ def delete_file(file_id):
 def student_ranking():
     result = None
     
-    # تسجيل زيارة صفحة الترتيب في سجل الزيارات
     visitor_info = session.get('student_name', 'زائر عام')
     visit = VisitLog(
         visitor_type=visitor_info,
@@ -239,7 +260,6 @@ def student_ranking():
                 total = Student.query.count()
                 result = {"name": student.name, "rank": rank, "total": total}
                 
-                # تسجيل نشاط الاستعلام
                 log = StudentActivityLog(
                     student_name=student.name,
                     nat_id=nat_id,
@@ -278,7 +298,6 @@ def student_ranking():
             new_student = Student(nat_id=nat_id, name=name, gpa=gpa, status="approved")
             db.session.add(new_student)
             
-            # تسجيل نشاط التسجيل الجديد
             log = StudentActivityLog(
                 student_name=name,
                 nat_id=nat_id,
@@ -300,7 +319,7 @@ def student_ranking():
 @app.route("/admin/delete_student/<int:id>", methods=["POST"])
 def delete_student(id):
     student = Student.query.get_or_404(id)
-    db.system.delete(student) if hasattr(db, 'system') else db.session.delete(student)
+    db.session.delete(student)
     db.session.commit()
     flash("🗑️ تم حذف الطالب بنجاح!", "success")
     return redirect("/admin")
