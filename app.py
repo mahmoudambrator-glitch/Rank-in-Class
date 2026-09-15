@@ -11,7 +11,7 @@ from flask import (
     request,
     url_for,
     session,
-    send_from_directory,
+    send_file,
 )
 from flask_sqlalchemy import SQLAlchemy
 
@@ -115,9 +115,8 @@ def subject_detail(subject_id):
 
 @app.route('/open_file/<int:file_id>')
 def open_file(file_id):
-    """عرض الملف مباشرة في المتصفح كـ PDF مع معالجة الترويسات بدقة"""
+    """إجبار المتصفح على عرض ملف الـ PDF مباشرة داخل التاب بدون أي تنزيل"""
     file_item = MaterialFile.query.get_or_404(file_id)
-    file_item.views_count = (file_item.views_count or 0) + 1
     
     visitor_info = session.get('student_name', 'زائر عام')
     visit = VisitLog(
@@ -129,16 +128,12 @@ def open_file(file_id):
     db.session.commit()
 
     if file_item.file_path and os.path.exists(file_item.file_path):
-        directory = os.path.abspath(app.config['UPLOAD_FOLDER'])
-        filename = os.path.basename(file_item.file_path)
-        
-        original_name = filename.split('_', 1)[1] if '_' in filename else filename
-        
-        # استخدام إرسال الملف مع فرض الترويسات الصحيحة لمنع قراءته كنص خام
-        response = send_from_directory(directory, filename, mimetype='application/pdf')
-        response.headers['Content-Disposition'] = f'inline; filename="{original_name}"'
-        response.headers['X-Content-Type-Options'] = 'nosniff' # منع المتصفح من تخمين النوع بشكل خاطئ
-        return response
+        # استخدام send_file المباشر مع مهارة الـ mimetype الصريحة للـ PDF
+        return send_file(
+            file_item.file_path,
+            mimetype='application/pdf',
+            as_attachment=False
+        )
     
     flash('❌ الملف المطلوبة غير موجود على السيرفر!', 'danger')
     return redirect(url_for('home'))
