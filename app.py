@@ -188,10 +188,9 @@ def add_subject():
 def add_file():
     file_type = request.form.get('file_type')
     subject_id_raw = request.form.get('subject_id')
-    title = request.form.get('title')
     
-    if not subject_id_raw or not title:
-        flash('❌ يرجى اختيار المادة وإدخال عنوان الملف!', 'danger')
+    if not subject_id_raw:
+        flash('❌ يرجى اختيار المادة الدراسية!', 'danger')
         return redirect(url_for('admin'))
 
     try:
@@ -207,8 +206,11 @@ def add_file():
     if 'file' in request.files:
         file = request.files['file']
         if file and file.filename != '':
-            filename = secure_filename(file.filename)
-            filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
+            original_filename = secure_filename(file.filename)
+            # استخدام اسم الملف الأصلي تلقائياً كعنوان
+            title = original_filename
+            
+            filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{original_filename}"
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(file_path)
 
