@@ -11,6 +11,7 @@ from flask import (
     request,
     url_for,
     session,
+    send_from_directory,
 )
 from flask_sqlalchemy import SQLAlchemy
 
@@ -74,7 +75,7 @@ class StudentActivityLog(db.Model):
 
 
 with app.app_context():
-    db.create_all()  # بناء الجداول بأمان بدون حذف البيانات القديمة (تم إزالة drop_all الحارقة)
+    db.create_all()  # بناء الجداول بأمان بدون حذف البيانات القديمة
 
 # تتبع الزيارة العامة للموقع (مرة واحدة فقط لكل جلسة مستخدم)
 @app.before_request
@@ -118,7 +119,7 @@ def subject_detail(subject_id):
 
 @app.route('/open_file/<int:file_id>')
 def open_file(file_id):
-    """فتح ومعاينة الملف المحلي للمادة"""
+    """فتح أو تحميل الملف المحلي مباشرة بدون صفحة معاينة معقدة"""
     file_item = MaterialFile.query.get_or_404(file_id)
     file_item.views_count = (file_item.views_count or 0) + 1
     
@@ -132,8 +133,13 @@ def open_file(file_id):
     db.session.add(visit)
     db.session.commit()
 
-    # توجيه الطالب إلى صفحة المعاينة والتحميل المحلية المباشرة
-    return render_template('drive_view.html.html', file_item=file_item)
+    # استخراج اسم الملف الفعلي من المسار المخزن وإرساله للمتصفح مباشرة
+    if file_item.file_path:
+        directory = os.path.abspath(app.config['UPLOAD_FOLDER'])
+        filename = os.path.basename(file_item.file_path)
+        return send_from_directory(directory, filename)
+    
+    abort(404)
 
 
 # --- لوحة التحكم المركزية ---
