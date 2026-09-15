@@ -133,7 +133,7 @@ def open_file(file_id):
     db.session.add(visit)
     db.session.commit()
 
-    # توجيه الطالب إلى صفحة العرض المباشر بالاسم الفعلي للـ template
+    # توجيه الطالب إلى صفحة المعاينة والتحميل المحلية المباشرة
     return render_template('drive_view.html.html', file_item=file_item)
 
 
