@@ -19,13 +19,11 @@
                     <div>
                         <span class="badge bg-secondary me-2">{{ file.file_type }}</span>
                         <strong class="fs-5">{{ file.title }}</strong>
-                        
-                        <!-- عدد المشاهدات يظهر للأدمن فقط (لو حابب تظهرها للأدمن هنا أو في لوحة التحكم، وهي هنا ظاهرة بذكاء أو مخفية عن العام) -->
                     </div>
                     <div>
-                        <!-- زر معاينة أو تحميل الملف المباشر -->
+                        <!-- زر فتح الملف بالنص المطلوب -->
                         <a href="{{ url_for('open_file', file_id=file.id) }}" class="btn btn-outline-primary btn-sm px-4 fw-bold">
-                            معاينة / تحميل الملف
+                            فتح الملف
                         </a>
                     </div>
                 </div>
