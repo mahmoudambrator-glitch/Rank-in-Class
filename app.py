@@ -74,8 +74,7 @@ class StudentActivityLog(db.Model):
 
 
 with app.app_context():
-    db.drop_all()    # تنظيف القاعدة القديمة المتعارضة
-    db.create_all()  # بناء الجداول الجديدة بنجاح
+    db.create_all()  # بناء الجداول بأمان بدون حذف البيانات القديمة (تم إزالة drop_all الحارقة)
 
 # تتبع الزيارة العامة للموقع (مرة واحدة فقط لكل جلسة مستخدم)
 @app.before_request
