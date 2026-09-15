@@ -21,8 +21,8 @@
                         <strong class="fs-5">{{ file.title }}</strong>
                     </div>
                     <div>
-                        <!-- زر فتح الملف بالنص المطلوب -->
-                        <a href="{{ url_for('open_file', file_id=file.id) }}" class="btn btn-outline-primary btn-sm px-4 fw-bold">
+                        <!-- زر فتح الملف في صفحة جديدة (تاب جديد) -->
+                        <a href="{{ url_for('open_file', file_id=file.id) }}" target="_blank" class="btn btn-outline-primary btn-sm px-4 fw-bold">
                             فتح الملف
                         </a>
                     </div>
