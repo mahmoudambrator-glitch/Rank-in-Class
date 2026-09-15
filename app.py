@@ -46,7 +46,7 @@ class MaterialFile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(150), nullable=False)
     file_type = db.Column(db.String(50))
-    file_path = db.Column(db.String(500), nullable=False)  # مخصص لتخزين مسار الملف المحلي
+    file_path = db.Column(db.String(500), nullable=False)
     views_count = db.Column(db.Integer, default=0)
     subject_id = db.Column(
         db.Integer, db.ForeignKey('subject.id'), nullable=False
@@ -75,15 +75,13 @@ class StudentActivityLog(db.Model):
 
 
 with app.app_context():
-    db.create_all()  # بناء الجداول بأمان بدون حذف البيانات القديمة
+    db.create_all()
 
-# تتبع الزيارة العامة للموقع (مرة واحدة فقط لكل جلسة مستخدم)
 @app.before_request
 def track_visit():
     if not request.path.startswith('/static') and not request.path.startswith('/admin') and 'favicon.ico' not in request.path:
         if not session.get('visit_recorded'):
             visitor_info = session.get('student_name', 'زائر عام')
-            
             visit = VisitLog(
                 visitor_type=visitor_info,
                 ip_address=request.remote_addr, 
@@ -91,7 +89,6 @@ def track_visit():
             )
             db.session.add(visit)
             db.session.commit()
-            
             session['visit_recorded'] = True
 
 # --- مسارات المكتبة وعرض الملفات ---
@@ -105,7 +102,6 @@ def home():
 def subject_detail(subject_id):
     subject = Subject.query.get_or_404(subject_id)
     
-    # تسجيل زيارة صفحة المادة في السجل
     visitor_info = session.get('student_name', 'زائر عام')
     visit = VisitLog(
         visitor_type=visitor_info,
@@ -119,11 +115,10 @@ def subject_detail(subject_id):
 
 @app.route('/open_file/<int:file_id>')
 def open_file(file_id):
-    """عرض الملف مباشرة في المتصفح كـ PDF بدون تحميل إجباري"""
+    """عرض الملف مباشرة في المتصفح كـ PDF مع معالجة الترويسات بدقة"""
     file_item = MaterialFile.query.get_or_404(file_id)
     file_item.views_count = (file_item.views_count or 0) + 1
     
-    # تسجيل زيارة فتح الملف في سجل الزيارات العام
     visitor_info = session.get('student_name', 'زائر عام')
     visit = VisitLog(
         visitor_type=visitor_info,
@@ -133,19 +128,20 @@ def open_file(file_id):
     db.session.add(visit)
     db.session.commit()
 
-    if file_item.file_path:
+    if file_item.file_path and os.path.exists(file_item.file_path):
         directory = os.path.abspath(app.config['UPLOAD_FOLDER'])
         filename = os.path.basename(file_item.file_path)
         
-        # استخراج اسم الملف الأصلي الحقيقي بعد علامة الـ underscore الأولى
         original_name = filename.split('_', 1)[1] if '_' in filename else filename
         
-        # استخدام response لضبط النوع لعرضه مباشرة في المتصفح (inline) وليس تحميل (attachment)
+        # استخدام إرسال الملف مع فرض الترويسات الصحيحة لمنع قراءته كنص خام
         response = send_from_directory(directory, filename, mimetype='application/pdf')
         response.headers['Content-Disposition'] = f'inline; filename="{original_name}"'
+        response.headers['X-Content-Type-Options'] = 'nosniff' # منع المتصفح من تخمين النوع بشكل خاطئ
         return response
     
-    abort(404)
+    flash('❌ الملف المطلوبة غير موجود على السيرفر!', 'danger')
+    return redirect(url_for('home'))
 
 
 # --- لوحة التحكم المركزية ---
@@ -205,7 +201,6 @@ def add_file():
         flash('❌ خطأ في معرف المادة!', 'danger')
         return redirect(url_for('admin'))
 
-    # التأكد من وجود مجلد الرفع
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
 
@@ -213,7 +208,6 @@ def add_file():
         file = request.files['file']
         if file and file.filename != '':
             original_filename = secure_filename(file.filename)
-            # استخدام اسم الملف الأصلي تلقائياً كعنوان
             title = original_filename
             
             filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{original_filename}"
@@ -245,7 +239,6 @@ def delete_subject(subject_id):
 @app.route('/admin/delete_file/<int:file_id>', methods=['POST'])
 def delete_file(file_id):
     file_item = MaterialFile.query.get_or_404(file_id)
-    # حذف الملف الفعلي من السيرفر إن وجد
     if file_item.file_path and os.path.exists(file_item.file_path):
         try:
             os.remove(file_item.file_path)
@@ -331,8 +324,7 @@ def student_ranking():
             db.session.add(log)
             db.session.commit()
             
-            session.permanent = True
-            session['student_name'] = name
+            session.permanent, session['student_name'] = True, name
             
             rank = Student.query.filter(Student.gpa > gpa).count() + 1
             total = Student.query.count()
