@@ -51,7 +51,7 @@
             <button type="submit" class="btn btn-success">إضافة المادة</button>
         </form>
 
-        <!-- نموذج رفع الملف محلياً -->
+        <!-- نموذج رفع الملف محلياً (بدون خانة عنوان) -->
         <form action="{{ url_for('add_file') }}" method="POST" enctype="multipart/form-data" class="mb-4 p-3 bg-light rounded">
             <h5>رفع ملف / ملخص جديد من جهازك</h5>
             <div class="mb-3">
@@ -69,10 +69,6 @@
                     <option value="كتاب">كتاب</option>
                     <option value="امتحان">امتحان سابق</option>
                 </select>
-            </div>
-            <!-- حقل عنوان الملف المضاف حديثاً لمنع أخطاء قاعدة البيانات -->
-            <div class="mb-3">
-                <input type="text" name="title" class="form-control" placeholder="عنوان الملف (مثلاً: المحاضرة الأولى)" required>
             </div>
             <div class="mb-3">
                 <label class="form-label text-muted">اختر الملف من جهازك (PDF أو صور أو مستندات):</label>
@@ -93,8 +89,8 @@
             {% endfor %}
         </ul>
 
-        <!-- عرض أول 8 ملفات مرفوعة في الصفحة الرئيسية -->
-        <h5 class="mt-4">📁 تفاصيل الملفات المرفوعة وعدد المشاهدات:</h5>
+        <!-- عرض أول 8 ملفات مرفوعة (بدون عمود المشاهدات) -->
+        <h5 class="mt-4">📁 تفاصيل الملفات المرفوعة:</h5>
         <div class="table-responsive">
             <table class="table table-bordered table-striped text-center align-middle">
                 <thead>
@@ -102,7 +98,6 @@
                         <th>اسم الملف / الكتاب</th>
                         <th>المادة</th>
                         <th>النوع</th>
-                        <th>عدد مرات الفتح</th>
                         <th>الإجراء</th>
                     </tr>
                 </thead>
@@ -112,7 +107,6 @@
                         <td>{{ file.title }}</td>
                         <td>{{ file.subject.name }}</td>
                         <td><span class="badge bg-secondary">{{ file.file_type }}</span></td>
-                        <td class="fw-bold text-success">{{ file.views_count }} مرة</td>
                         <td>
                             <form action="{{ url_for('delete_file', file_id=file.id) }}" method="POST" style="display:inline;">
                                 <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('حذف الملف نهائياً؟')">حذف</button>
