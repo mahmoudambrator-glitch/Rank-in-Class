@@ -119,7 +119,7 @@ def subject_detail(subject_id):
 
 @app.route('/open_file/<int:file_id>')
 def open_file(file_id):
-    """فتح أو تحميل الملف المحلي مباشرة بدون صفحة معاينة معقدة"""
+    """عرض الملف مباشرة في المتصفح كـ PDF بدون تحميل إجباري"""
     file_item = MaterialFile.query.get_or_404(file_id)
     file_item.views_count = (file_item.views_count or 0) + 1
     
@@ -133,11 +133,17 @@ def open_file(file_id):
     db.session.add(visit)
     db.session.commit()
 
-    # استخراج اسم الملف الفعلي من المسار المخزن وإرساله للمتصفح مباشرة
     if file_item.file_path:
         directory = os.path.abspath(app.config['UPLOAD_FOLDER'])
         filename = os.path.basename(file_item.file_path)
-        return send_from_directory(directory, filename)
+        
+        # استخراج اسم الملف الأصلي الحقيقي بعد علامة الـ underscore الأولى
+        original_name = filename.split('_', 1)[1] if '_' in filename else filename
+        
+        # استخدام response لضبط النوع لعرضه مباشرة في المتصفح (inline) وليس تحميل (attachment)
+        response = send_from_directory(directory, filename, mimetype='application/pdf')
+        response.headers['Content-Disposition'] = f'inline; filename="{original_name}"'
+        return response
     
     abort(404)
 
