@@ -187,9 +187,19 @@ def add_subject():
 @app.route('/admin/add_file', methods=['POST'])
 def add_file():
     file_type = request.form.get('file_type')
-    subject_id = request.form.get('subject_id')
+    subject_id_raw = request.form.get('subject_id')
     title = request.form.get('title')
     
+    if not subject_id_raw or not title:
+        flash('❌ يرجى اختيار المادة وإدخال عنوان الملف!', 'danger')
+        return redirect(url_for('admin'))
+
+    try:
+        subject_id = int(subject_id_raw)
+    except ValueError:
+        flash('❌ خطأ في معرف المادة!', 'danger')
+        return redirect(url_for('admin'))
+
     # التأكد من وجود مجلد الرفع
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
@@ -211,6 +221,8 @@ def add_file():
             db.session.add(new_file)
             db.session.commit()
             flash('تم رفع الملف بنجاح!', 'success')
+        else:
+            flash('❌ لم يتم اختيار أي ملف للرفع!', 'warning')
 
     return redirect(url_for('admin'))
 
