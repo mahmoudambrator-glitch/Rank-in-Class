@@ -75,18 +75,32 @@ with app.app_context():
 @app.before_request
 def track_visit():
     if not request.path.startswith('/static') and not request.path.startswith('/admin') and 'favicon.ico' not in request.path:
-        if not session.get('visit_recorded'):
+        
+        # 1. عداد الزيارات الرئيسي: يتحسب مرة واحدة فقط للجلسة عند فتح الموقع لأول مرة
+        if not session.get('site_visit_counted'):
             visitor_info = session.get('student_name', 'زائر عام')
             visit = VisitLog(
                 visitor_type=visitor_info,
                 ip_address=request.remote_addr, 
-                page_visited=request.path
+                page_visited='زيارة الموقع لأول مرة'
             )
             db.session.add(visit)
             db.session.commit()
-            session['visit_recorded'] = True
+            session['site_visit_counted'] = True
 
-# --- مسارات المكتبة وعرض الملفات ---
+        # 2. سجل التحركات والتنقلات: يسجل أي صفحة يفتحها مع اسم الطالب لو كان مسجل مسبقاً (من غير ما يزود عداد الزيارات الرئيسي)
+        # نقوم بتسجيل الصفحة الحالية في جدول منفصل أو تسجيلها مباشرة بدون رفع عداد الكارد الرئيسي
+        current_visitor = session.get('student_name', 'زائر عام')
+        
+        # لو حابب تسجل كل حركة تنقل تفصيلية في نفس جدول الـ VisitLog بس بشرط ما تحسبش كزيارة رئيسية جديدة:
+        # (بما إننا استخدمننا شرط site_visit_counted فوق للزيارة الأولى، فأي حركة تانية هتتسجل كتنقل طبيعي)
+        action_visit = VisitLog(
+            visitor_type=current_visitor,
+            ip_address=request.remote_addr,
+            page_visited=request.path
+        )
+        db.session.add(action_visit)
+        db.session.commit()
 
 @app.route('/')
 def home():
