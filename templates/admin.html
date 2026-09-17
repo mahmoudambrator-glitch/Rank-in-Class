@@ -51,9 +51,9 @@
             <button type="submit" class="btn btn-success">إضافة المادة</button>
         </form>
 
-        <!-- نموذج رفع الملف محلياً (بدون خانة عنوان) -->
-        <form action="{{ url_for('add_file') }}" method="POST" enctype="multipart/form-data" class="mb-4 p-3 bg-light rounded">
-            <h5>رفع ملف / ملخص جديد من جهازك</h5>
+        <!-- نموذج إضافة رابط ملف من Google Drive -->
+        <form action="{{ url_for('add_file') }}" method="POST" class="mb-4 p-3 bg-light rounded">
+            <h5>إضافة رابط ملف جديد (من Google Drive)</h5>
             <div class="mb-3">
                 <select name="subject_id" class="form-control" required>
                     <option value="">اختر المادة</option>
@@ -71,10 +71,12 @@
                 </select>
             </div>
             <div class="mb-3">
-                <label class="form-label text-muted">اختر الملف من جهازك (PDF أو صور أو مستندات):</label>
-                <input type="file" name="file" class="form-control" required>
+                <input type="text" name="title" class="form-control" placeholder="عنوان الملف أو المحاضرة (مثال: المحاضرة الأولى قواعد)" required>
             </div>
-            <button type="submit" class="btn btn-primary">رفع الملف الآن</button>
+            <div class="mb-3">
+                <input type="url" name="drive_url" class="form-control" placeholder="ألصق رابط Google Drive هنا (https://...)" required>
+            </div>
+            <button type="submit" class="btn btn-primary">حفظ وإضافة الرابط</button>
         </form>
 
         <h5>المواد الحالية والملفات:</h5>
@@ -89,13 +91,13 @@
             {% endfor %}
         </ul>
 
-        <!-- عرض أول 8 ملفات مرفوعة (بدون عمود المشاهدات) -->
-        <h5 class="mt-4">📁 تفاصيل الملفات المرفوعة:</h5>
+        <!-- عرض أول 8 ملفات مرفوعة -->
+        <h5 class="mt-4">📁 تفاصيل الملفات المضافة:</h5>
         <div class="table-responsive">
             <table class="table table-bordered table-striped text-center align-middle">
                 <thead>
                     <tr>
-                        <th>اسم الملف / الكتاب</th>
+                        <th>عنوان الملف / المحاضرة</th>
                         <th>المادة</th>
                         <th>النوع</th>
                         <th>الإجراء</th>
