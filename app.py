@@ -12,7 +12,7 @@ from flask import (
     url_for,
     session,
     send_file,
-    send_from_directory,
+    jsonify,
 )
 from flask_sqlalchemy import SQLAlchemy
 
@@ -95,7 +95,14 @@ def track_visit():
 # --- مسار التوثيق الخاص بـ TWA (لإلغاء شريط كروم) ---
 @app.route('/.well-known/assetlinks.json')
 def assetlinks():
-    return send_from_directory(os.path.dirname(os.path.abspath(__file__)), 'assetlinks.json')
+    return jsonify([{
+        "relation": ["delegate_permission/common.handle_all_urls"],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.pythonanywhere.ambrator.twa",
+            "sha256_cert_fingerprints": ["17:B6:BC:6E:66:F4:8E:A4:24:66:C4:61:CC:43:2D:78:5F:E2:8D:5F:AE:BC:A7:95:25:00:B1:1A:FF:37:B4:A3"]
+        }
+    }])
 
 # --- مسارات المكتبة وعرض الملفات ---
 
