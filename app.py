@@ -54,7 +54,7 @@ class Student(db.Model):
     gpa = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), default="approved")
 
-# جدول زيارات الموقع (عند الدخول لأول مرة فقط)
+# جدول زيارات الموقع (مرة لكل دخول جلسة جديدة)
 class VisitLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     visitor_type = db.Column(db.String(50), default="زائر عام") 
@@ -62,7 +62,7 @@ class VisitLog(db.Model):
     timestamp = db.Column(db.DateTime, default=lambda: datetime.now(ZoneInfo("Africa/Cairo")))
     page_visited = db.Column(db.String(200), default='دخول الموقع')
 
-# جدول التتبع والتحركات (لكل حركة أو تنقل يقوم به المستخدم)
+# جدول التتبع والتحركات التفصيلية
 class TrackingLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     visitor_type = db.Column(db.String(50), default="زائر عام") 
@@ -87,8 +87,8 @@ def track_visit():
         
         current_visitor = session.get('student_name') or 'زائر عام'
 
-        # 1. عداد زيارات الموقع الرئيسي: يسجل مرة واحدة فقط عند فتح الموقع للجلسة
-        if not session.get('site_visit_counted'):
+        # 1. عداد زيارات الموقع الرئيسي: يتحقق من الجلسة (لو فتح لأول مرة أو بعد إغلاق المتصفح/الجلسة)
+        if not session.get('active_session_visited'):
             visit = VisitLog(
                 visitor_type=current_visitor,
                 ip_address=request.remote_addr, 
@@ -96,9 +96,9 @@ def track_visit():
             )
             db.session.add(visit)
             db.session.commit()
-            session['site_visit_counted'] = True
+            session['active_session_visited'] = True
 
-        # 2. سجل التتبع والتحركات: يسجل أي صفحة أو تنقل يفعله المستخدم في جدوله الخاص
+        # 2. سجل التتبع والتحركات التفصيلية (يمنع تكرار نفس المسار وراء بعض مباشرة لنفس الـ IP)
         last_track = TrackingLog.query.filter_by(ip_address=request.remote_addr).order_by(TrackingLog.timestamp.desc()).first()
         
         if not last_track or last_track.action_performed != request.path or last_track.visitor_type != current_visitor:
@@ -135,11 +135,11 @@ def open_file(file_id):
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
-    total_visits = VisitLog.query.count() # إجمالي زوار الموقع
+    total_visits = VisitLog.query.count()
     subjects = Subject.query.all()
     all_files = MaterialFile.query.all()
     recent_visits = VisitLog.query.order_by(VisitLog.timestamp.desc()).limit(20).all()
-    recent_trackings = TrackingLog.query.order_by(TrackingLog.timestamp.desc()).limit(30).all() # سجل التتبع
+    recent_trackings = TrackingLog.query.order_by(TrackingLog.timestamp.desc()).limit(30).all()
     students = Student.query.order_by(Student.gpa.desc()).all()
     student_activities = StudentActivityLog.query.order_by(StudentActivityLog.timestamp.desc()).limit(30).all()
 
