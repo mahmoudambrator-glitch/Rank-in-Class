@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import os
-from werkzeug.utils import secure_filename
 from flask import (
     Flask,
     abort,
@@ -12,15 +11,10 @@ from flask import (
     url_for,
     session,
     send_file,
-    jsonify,
 )
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-
-# إعداد مجلد رفع الملفات محلياً
-UPLOAD_FOLDER = 'static/uploads'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # إعداد قاعدة البيانات وتوافقها مع المحلي و Render
 db_url = os.environ.get('DATABASE_URL')
@@ -47,7 +41,7 @@ class MaterialFile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(150), nullable=False)
     file_type = db.Column(db.String(50))
-    file_path = db.Column(db.String(500), nullable=False)
+    file_path = db.Column(db.String(500), nullable=False) # يخزن رابط Google Drive هنا
     views_count = db.Column(db.Integer, default=0)
     subject_id = db.Column(
         db.Integer, db.ForeignKey('subject.id'), nullable=False
@@ -92,18 +86,6 @@ def track_visit():
             db.session.commit()
             session['visit_recorded'] = True
 
-# --- مسار التوثيق الخاص بـ TWA (لإلغاء شريط كروم) ---
-@app.route('/.well-known/assetlinks.json')
-def assetlinks():
-    return jsonify([{
-        "relation": ["delegate_permission/common.handle_all_urls"],
-        "target": {
-            "namespace": "android_app",
-            "package_name": "com.pythonanywhere.ambrator.twa",
-            "sha256_cert_fingerprints": ["17:B6:BC:6E:66:F4:8E:A4:24:66:C4:61:CC:43:2D:78:5F:E2:8D:5F:AE:BC:A7:95:25:00:B1:1A:FF:37:B4:A3"]
-        }
-    }])
-
 # --- مسارات المكتبة وعرض الملفات ---
 
 @app.route('/')
@@ -128,26 +110,22 @@ def subject_detail(subject_id):
 
 @app.route('/open_file/<int:file_id>')
 def open_file(file_id):
-    """إجبار المتصفح على عرض ملف الـ PDF مباشرة داخل التاب بدون أي تنزيل"""
+    """توجه الطالب مباشرة إلى رابط Google Drive في تاب جديد"""
     file_item = MaterialFile.query.get_or_404(file_id)
     
     visitor_info = session.get('student_name', 'زائر عام')
     visit = VisitLog(
         visitor_type=visitor_info,
         ip_address=request.remote_addr,
-        page_visited=f'/open_file/{file_id} (عرض: {file_item.title})'
+        page_visited=f'/open_file/{file_id} (فتح رابط: {file_item.title})'
     )
     db.session.add(visit)
     db.session.commit()
 
-    if file_item.file_path and os.path.exists(file_item.file_path):
-        return send_file(
-            file_item.file_path,
-            mimetype='application/pdf',
-            as_attachment=False
-        )
+    if file_item.file_path:
+        return redirect(file_item.file_path)
     
-    flash('❌ الملف المطلوبة غير موجود على السيرفر!', 'danger')
+    flash('❌ الرابط المطلوبة غير موجود!', 'danger')
     return redirect(url_for('home'))
 
 
@@ -195,11 +173,13 @@ def add_subject():
 
 @app.route('/admin/add_file', methods=['POST'])
 def add_file():
+    title = request.form.get('title')
     file_type = request.form.get('file_type')
+    drive_url = request.form.get('drive_url')
     subject_id_raw = request.form.get('subject_id')
     
-    if not subject_id_raw:
-        flash('❌ يرجى اختيار المادة الدراسية!', 'danger')
+    if not subject_id_raw or not title or not drive_url:
+        flash('❌ يرجى ملء جميع الحقول المطلوبة (اسم الملف ورابط الدرايف والمادة)!', 'danger')
         return redirect(url_for('admin'))
 
     try:
@@ -208,30 +188,15 @@ def add_file():
         flash('❌ خطأ في معرف المادة!', 'danger')
         return redirect(url_for('admin'))
 
-    if not os.path.exists(app.config['UPLOAD_FOLDER']):
-        os.makedirs(app.config['UPLOAD_FOLDER'])
-
-    if 'file' in request.files:
-        file = request.files['file']
-        if file and file.filename != '':
-            original_filename = secure_filename(file.filename)
-            title = original_filename
-            
-            filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{original_filename}"
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(file_path)
-
-            new_file = MaterialFile(
-                title=title,
-                file_type=file_type,
-                file_path=file_path,
-                subject_id=subject_id,
-            )
-            db.session.add(new_file)
-            db.session.commit()
-            flash('تم رفع الملف بنجاح!', 'success')
-        else:
-            flash('❌ لم يتم اختيار أي ملف للرفع!', 'warning')
+    new_file = MaterialFile(
+        title=title,
+        file_type=file_type,
+        file_path=drive_url,
+        subject_id=subject_id,
+    )
+    db.session.add(new_file)
+    db.session.commit()
+    flash('تم إضافة رابط الملف بنجاح!', 'success')
 
     return redirect(url_for('admin'))
 
@@ -246,12 +211,6 @@ def delete_subject(subject_id):
 @app.route('/admin/delete_file/<int:file_id>', methods=['POST'])
 def delete_file(file_id):
     file_item = MaterialFile.query.get_or_404(file_id)
-    if file_item.file_path and os.path.exists(file_item.file_path):
-        try:
-            os.remove(file_item.file_path)
-        except:
-            pass
-            
     db.session.delete(file_item)
     db.session.commit()
     flash('تم حذف الملف بنجاح', 'success')
