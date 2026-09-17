@@ -87,8 +87,14 @@ def track_visit():
         
         current_visitor = session.get('student_name') or 'زائر عام'
 
-        # 1. عداد زيارات الموقع الرئيسي: يتحقق من الجلسة (لو فتح لأول مرة أو بعد إغلاق المتصفح/الجلسة)
-        if not session.get('active_session_visited'):
+        # استخدام وقت آخر نشاط للـ IP ده عشان نعرف لو طلع ورجع تاني بعد فترة قصيرة
+        now_time = datetime.now(ZoneInfo("Africa/Cairo"))
+        
+        # نinisال أو نتحقق من آخر زيارة مسجلة لنفس الـ IP
+        last_visit = VisitLog.query.filter_by(ip_address=request.remote_addr).order_by(VisitLog.timestamp.desc()).first()
+        
+        # لو مفيش زيارة قبل كده خالص، أو لو مر اكتر من 3 دقايق من آخر حركة (يعني اعتبرناه قفل الموقع وفتحه تاني)
+        if not last_visit or (now_time - last_visit.timestamp).total_seconds() > 180:
             visit = VisitLog(
                 visitor_type=current_visitor,
                 ip_address=request.remote_addr, 
@@ -96,9 +102,8 @@ def track_visit():
             )
             db.session.add(visit)
             db.session.commit()
-            session['active_session_visited'] = True
 
-        # 2. سجل التتبع والتحركات التفصيلية (يمنع تكرار نفس المسار وراء بعض مباشرة لنفس الـ IP)
+        # سجل التتبع والتحركات التفصيلية (يمنع تكرار نفس المسار وراء بعض مباشرة)
         last_track = TrackingLog.query.filter_by(ip_address=request.remote_addr).order_by(TrackingLog.timestamp.desc()).first()
         
         if not last_track or last_track.action_performed != request.path or last_track.visitor_type != current_visitor:
@@ -109,7 +114,6 @@ def track_visit():
             )
             db.session.add(track)
             db.session.commit()
-
 @app.route('/')
 def home():
     subjects = Subject.query.all()
