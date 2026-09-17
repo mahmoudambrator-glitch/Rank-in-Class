@@ -90,7 +90,7 @@ def track_visit():
         # استخدام وقت آخر نشاط للـ IP ده عشان نعرف لو طلع ورجع تاني بعد فترة قصيرة
         now_time = datetime.now(ZoneInfo("Africa/Cairo"))
         
-        # نinisال أو نتحقق من آخر زيارة مسجلة لنفس الـ IP
+        # التحقق من آخر زيارة مسجلة لنفس الـ IP
         last_visit = VisitLog.query.filter_by(ip_address=request.remote_addr).order_by(VisitLog.timestamp.desc()).first()
         
         # لو مفيش زيارة قبل كده خالص، أو لو مر اكتر من 3 دقايق من آخر حركة (يعني اعتبرناه قفل الموقع وفتحه تاني)
@@ -114,6 +114,7 @@ def track_visit():
             )
             db.session.add(track)
             db.session.commit()
+
 @app.route('/')
 def home():
     subjects = Subject.query.all()
