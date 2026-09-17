@@ -260,7 +260,7 @@
     </div>
 </div>
 
-<!-- سجل التتبع والتحركات -->
+<!-- سجل التتبع والتحركات التفصيلية -->
 <div class="card shadow-sm mb-5">
     <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
         <h4 class="mb-0">🕵️ سجل التتبع والتحركات التفصيلية</h4>
@@ -294,7 +294,20 @@
                             {% endif %}
                         </td>
                         <td>{{ track.ip_address }}</td>
-                        <td><span class="badge bg-dark">{{ track.action_performed }}</span></td>
+                        <td>
+                            <!-- الترجمة التلقائية للمسارات بالعربي -->
+                            {% if track.action_performed == '/' %}
+                                <span class="badge bg-primary">الصفحة الرئيسية للمكتبة</span>
+                            {% elif track.action_performed.startswith('/subject/') %}
+                                <span class="badge bg-success">استعراض مادة دراسية</span>
+                            {% elif track.action_performed.startswith('/open_file/') %}
+                                <span class="badge bg-info text-dark">فتح ملف دراسي (Google Drive)</span>
+                            {% elif track.action_performed.startswith('/ranking') %}
+                                <span class="badge bg-warning text-dark">منصة ترتيب الدفعة</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ track.action_performed }}</span>
+                            {% endif %}
+                        </td>
                         <td>{{ track.timestamp.strftime('%Y-%m-%d %I:%M %p') }}</td>
                     </tr>
                     {% else %}
@@ -368,7 +381,19 @@
                             <tr>
                                 <td>{{ track.visitor_type }}</td>
                                 <td>{{ track.ip_address }}</td>
-                                <td>{{ track.action_performed }}</td>
+                                <td>
+                                    {% if track.action_performed == '/' %}
+                                        الصفحة الرئيسية للمكتبة
+                                    {% elif track.action_performed.startswith('/subject/') %}
+                                        استعراض مادة دراسية
+                                    {% elif track.action_performed.startswith('/open_file/') %}
+                                        فتح ملف دراسي (Google Drive)
+                                    {% elif track.action_performed.startswith('/ranking') %}
+                                        منصة ترتيب الدفعة
+                                    {% else %}
+                                        {{ track.action_performed }}
+                                    {% endif %}
+                                </td>
                                 <td>{{ track.timestamp.strftime('%Y-%m-%d %I:%M %p') }}</td>
                             </tr>
                             {% endfor %}
@@ -379,8 +404,5 @@
         </div>
     </div>
 </div>
-
-<!-- Modal عرض كل الطلاب والأنشطة (باقي المودالز موجودة كما هي) -->
-<!-- ... -->
 
 {% endblock %}
