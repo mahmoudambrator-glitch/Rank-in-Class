@@ -87,14 +87,25 @@ def track_visit():
         
         current_visitor = session.get('student_name') or 'زائر عام'
 
-        # استخدام وقت آخر نشاط للـ IP ده عشان نعرف لو طلع ورجع تاني بعد فترة قصيرة
+        # الوقت الحالي مع توقيت القاهرة
         now_time = datetime.now(ZoneInfo("Africa/Cairo"))
         
         # التحقق من آخر زيارة مسجلة لنفس الـ IP
         last_visit = VisitLog.query.filter_by(ip_address=request.remote_addr).order_by(VisitLog.timestamp.desc()).first()
         
-        # لو مفيش زيارة قبل كده خالص، أو لو مر اكتر من 3 دقايق من آخر حركة (يعني اعتبرناه قفل الموقع وفتحه تاني)
-        if not last_visit or (now_time - last_visit.timestamp).total_seconds() > 180:
+        should_log_visit = False
+        if not last_visit:
+            should_log_visit = True
+        else:
+            # ضمان أن التاريخ القديم يحتوي على توقيت القاهرة لتجنب خطأ المطابقة
+            db_time = last_visit.timestamp
+            if db_time.tzinfo is None:
+                db_time = db_time.replace(tzinfo=ZoneInfo("Africa/Cairo"))
+            
+            if (now_time - db_time).total_seconds() > 180:
+                should_log_visit = True
+
+        if should_log_visit:
             visit = VisitLog(
                 visitor_type=current_visitor,
                 ip_address=request.remote_addr, 
@@ -114,7 +125,7 @@ def track_visit():
             )
             db.session.add(track)
             db.session.commit()
-
+            
 @app.route('/')
 def home():
     subjects = Subject.query.all()
