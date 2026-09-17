@@ -81,31 +81,21 @@ class StudentActivityLog(db.Model):
 with app.app_context():
     db.create_all()
 
+import uuid
+
 @app.before_request
 def track_visit():
     if not request.path.startswith('/static') and not request.path.startswith('/admin') and 'favicon.ico' not in request.path:
         
+        # إنشاء معرف فريد لكل متصفح/جلسة لو مش موجود (حتى لو تشابهت الـ IPs)
+        if 'visitor_uuid' not in session:
+            session['visitor_uuid'] = str(uuid.uuid4())
+            session['has_visited'] = False
+
         current_visitor = session.get('student_name') or 'زائر عام'
 
-        # الوقت الحالي مع توقيت القاهرة
-        now_time = datetime.now(ZoneInfo("Africa/Cairo"))
-        
-        # التحقق من آخر زيارة مسجلة لنفس الـ IP
-        last_visit = VisitLog.query.filter_by(ip_address=request.remote_addr).order_by(VisitLog.timestamp.desc()).first()
-        
-        should_log_visit = False
-        if not last_visit:
-            should_log_visit = True
-        else:
-            # ضمان أن التاريخ القديم يحتوي على توقيت القاهرة لتجنب خطأ المطابقة
-            db_time = last_visit.timestamp
-            if db_time.tzinfo is None:
-                db_time = db_time.replace(tzinfo=ZoneInfo("Africa/Cairo"))
-            
-            if (now_time - db_time).total_seconds() > 180:
-                should_log_visit = True
-
-        if should_log_visit:
+        # لو الجلسة دي لسه مَسجلتش زيارة رئيسية للموقع
+        if not session.get('has_visited'):
             visit = VisitLog(
                 visitor_type=current_visitor,
                 ip_address=request.remote_addr, 
@@ -113,8 +103,10 @@ def track_visit():
             )
             db.session.add(visit)
             db.session.commit()
+            session['has_visited'] = True  # منع تكرار العد لنفس الجلسة أثناء التنقل
 
-        # سجل التتبع والتحركات التفصيلية (يمنع تكرار نفس المسار وراء بعض مباشرة)
+        # تحديث نوع الزائر لو قام بتسجيل الدخول أو الاستعلام كطالب لاحقاً
+        # (لتحديث اسم الزائر في آخر حركة تتبع)
         last_track = TrackingLog.query.filter_by(ip_address=request.remote_addr).order_by(TrackingLog.timestamp.desc()).first()
         
         if not last_track or last_track.action_performed != request.path or last_track.visitor_type != current_visitor:
@@ -125,7 +117,7 @@ def track_visit():
             )
             db.session.add(track)
             db.session.commit()
-            
+
 @app.route('/')
 def home():
     subjects = Subject.query.all()
