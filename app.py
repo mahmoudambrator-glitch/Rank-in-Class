@@ -54,12 +54,21 @@ class Student(db.Model):
     gpa = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), default="approved")
 
+# جدول زيارات الموقع (عند الدخول لأول مرة فقط)
 class VisitLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    visitor_type = db.Column(db.String(50), default="زائر") 
+    visitor_type = db.Column(db.String(50), default="زائر عام") 
     ip_address = db.Column(db.String(50))
     timestamp = db.Column(db.DateTime, default=lambda: datetime.now(ZoneInfo("Africa/Cairo")))
-    page_visited = db.Column(db.String(200))
+    page_visited = db.Column(db.String(200), default='دخول الموقع')
+
+# جدول التتبع والتحركات (لكل حركة أو تنقل يقوم به المستخدم)
+class TrackingLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    visitor_type = db.Column(db.String(50), default="زائر عام") 
+    ip_address = db.Column(db.String(50))
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(ZoneInfo("Africa/Cairo")))
+    action_performed = db.Column(db.String(200))
 
 class StudentActivityLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -76,31 +85,29 @@ with app.app_context():
 def track_visit():
     if not request.path.startswith('/static') and not request.path.startswith('/admin') and 'favicon.ico' not in request.path:
         
-        # 1. هات اسم الطالب الحالي من الجلسة لو موجود، وإلا خليه "زائر عام"
-        current_visitor = session.get('student_name', 'زائر عام')
+        current_visitor = session.get('student_name') or 'زائر عام'
 
-        # 2. عداد الزيارات الرئيسي: يتحسب مرة واحدة فقط للجلسة عند فتح الموقع لأول مرة
+        # 1. عداد زيارات الموقع الرئيسي: يسجل مرة واحدة فقط عند فتح الموقع للجلسة
         if not session.get('site_visit_counted'):
             visit = VisitLog(
                 visitor_type=current_visitor,
                 ip_address=request.remote_addr, 
-                page_visited='زيارة الموقع لأول مرة'
+                page_visited='دخول الموقع'
             )
             db.session.add(visit)
             db.session.commit()
             session['site_visit_counted'] = True
 
-        # 3. سجل التحركات والتنقلات: يسجل الحركة الحالية بالاسم الحالي للزائر
-        # منعنا لتسجيل نفس الصفحة مرتين متتاليتين لمنع الحشو في السجل
-        last_log = VisitLog.query.filter_by(ip_address=request.remote_addr).order_by(VisitLog.timestamp.desc()).first()
+        # 2. سجل التتبع والتحركات: يسجل أي صفحة أو تنقل يفعله المستخدم في جدوله الخاص
+        last_track = TrackingLog.query.filter_by(ip_address=request.remote_addr).order_by(TrackingLog.timestamp.desc()).first()
         
-        if not last_log or last_log.page_visited != request.path:
-            action_visit = VisitLog(
+        if not last_track or last_track.action_performed != request.path or last_track.visitor_type != current_visitor:
+            track = TrackingLog(
                 visitor_type=current_visitor,
                 ip_address=request.remote_addr,
-                page_visited=request.path
+                action_performed=request.path
             )
-            db.session.add(action_visit)
+            db.session.add(track)
             db.session.commit()
 
 @app.route('/')
@@ -111,32 +118,12 @@ def home():
 @app.route('/subject/<int:subject_id>')
 def subject_detail(subject_id):
     subject = Subject.query.get_or_404(subject_id)
-    
-    visitor_info = session.get('student_name', 'زائر عام')
-    visit = VisitLog(
-        visitor_type=visitor_info,
-        ip_address=request.remote_addr,
-        page_visited=f'/subject/{subject_id} ({subject.name})'
-    )
-    db.session.add(visit)
-    db.session.commit()
-
     return render_template('subject_detail.html', subject=subject)
 
 @app.route('/open_file/<int:file_id>')
 def open_file(file_id):
     """توجه الطالب مباشرة إلى رابط Google Drive في تاب جديد"""
     file_item = MaterialFile.query.get_or_404(file_id)
-    
-    visitor_info = session.get('student_name', 'زائر عام')
-    visit = VisitLog(
-        visitor_type=visitor_info,
-        ip_address=request.remote_addr,
-        page_visited=f'/open_file/{file_id} (فتح رابط: {file_item.title})'
-    )
-    db.session.add(visit)
-    db.session.commit()
-
     if file_item.file_path:
         return redirect(file_item.file_path)
     
@@ -148,10 +135,11 @@ def open_file(file_id):
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
-    total_visits = VisitLog.query.count()
+    total_visits = VisitLog.query.count() # إجمالي زوار الموقع
     subjects = Subject.query.all()
     all_files = MaterialFile.query.all()
     recent_visits = VisitLog.query.order_by(VisitLog.timestamp.desc()).limit(20).all()
+    recent_trackings = TrackingLog.query.order_by(TrackingLog.timestamp.desc()).limit(30).all() # سجل التتبع
     students = Student.query.order_by(Student.gpa.desc()).all()
     student_activities = StudentActivityLog.query.order_by(StudentActivityLog.timestamp.desc()).limit(30).all()
 
@@ -161,6 +149,7 @@ def admin():
         subjects=subjects,
         all_files=all_files,
         recent_visits=recent_visits,
+        recent_trackings=recent_trackings,
         students=students,
         student_activities=student_activities
     )
@@ -170,10 +159,21 @@ def clear_visits():
     try:
         db.session.query(VisitLog).delete()
         db.session.commit()
-        flash('🗑️ تم تصفير جميع سجلات الزيارات بنجاح!', 'success')
+        flash('🗑️ تم تصفير سجلات الزيارات بنجاح!', 'success')
     except Exception as e:
         db.session.rollback()
-        flash('❌ حدث خطأ أثناء تصفير السجلات', 'danger')
+        flash('❌ حدث خطأ أثناء التصفير', 'danger')
+    return redirect(url_for('admin'))
+
+@app.route('/admin/clear_tracking', methods=['POST'])
+def clear_tracking():
+    try:
+        db.session.query(TrackingLog).delete()
+        db.session.commit()
+        flash('🗑️ تم تصفير سجلات التتبع بنجاح!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('❌ حدث خطأ أثناء التصفير', 'danger')
     return redirect(url_for('admin'))
 
 @app.route('/admin/add_subject', methods=['POST'])
@@ -194,7 +194,7 @@ def add_file():
     subject_id_raw = request.form.get('subject_id')
     
     if not subject_id_raw or not title or not drive_url:
-        flash('❌ يرجى ملء جميع الحقول المطلوبة (اسم الملف ورابط الدرايف والمادة)!', 'danger')
+        flash('❌ يرجى ملء جميع الحقول المطلوبة!', 'danger')
         return redirect(url_for('admin'))
 
     try:
@@ -236,15 +236,6 @@ def delete_file(file_id):
 @app.route("/ranking", methods=["GET", "POST"])
 def student_ranking():
     result = None
-    
-    visitor_info = session.get('student_name', 'زائر عام')
-    visit = VisitLog(
-        visitor_type=visitor_info,
-        ip_address=request.remote_addr,
-        page_visited='/ranking (منصة الترتيب)'
-    )
-    db.session.add(visit)
-    db.session.commit()
 
     if request.method == "POST":
         action = request.form.get("action_type")
