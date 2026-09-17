@@ -12,6 +12,7 @@ from flask import (
     url_for,
     session,
     send_file,
+    send_from_directory,
 )
 from flask_sqlalchemy import SQLAlchemy
 
@@ -91,6 +92,11 @@ def track_visit():
             db.session.commit()
             session['visit_recorded'] = True
 
+# --- مسار التوثيق الخاص بـ TWA (لإلغاء شريط كروم) ---
+@app.route('/.well-known/assetlinks.json')
+def assetlinks():
+    return send_from_directory(os.path.dirname(os.path.abspath(__file__)), 'assetlinks.json')
+
 # --- مسارات المكتبة وعرض الملفات ---
 
 @app.route('/')
@@ -128,7 +134,6 @@ def open_file(file_id):
     db.session.commit()
 
     if file_item.file_path and os.path.exists(file_item.file_path):
-        # استخدام send_file المباشر مع مهارة الـ mimetype الصريحة للـ PDF
         return send_file(
             file_item.file_path,
             mimetype='application/pdf',
