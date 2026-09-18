@@ -85,14 +85,18 @@
             <button type="submit" class="btn btn-primary">حفظ وإضافة الرابط</button>
         </form>
 
-        <!-- خانة البحث السريع في المواد -->
-        <div class="mb-3">
-            <input type="text" id="subjectSearchInput" class="form-control" placeholder="🔍 ابحث عن اسم المادة هنا...">
+        <!-- قسم المواد الحالية مع تحديد 5 عناصر وعرض الكل -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">المواد الحالية والملفات:</h5>
+            {% if subjects|length > 5 %}
+            <button type="button" class="btn btn-outline-primary btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#subjectsListModal">
+                🔍 عرض الكل ({{ subjects|length }})
+            </button>
+            {% endif %}
         </div>
 
-        <h5>المواد الحالية والملفات:</h5>
         <ul class="list-group mb-4" id="subjectsList">
-            {% for sub in subjects %}
+            {% for sub in subjects[:5] %}
             <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2 subject-item">
                 <!-- النقر على اسم المادة يفتح ملفاتها مباشرة في مودال -->
                 <span class="fw-bold text-primary" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#subjectFilesModal{{ sub.id }}" title="اضغط لعرض ملفات المادة">
@@ -181,7 +185,16 @@
             {% endfor %}
         </ul>
 
-        <h5 class="mt-4">📁 تفاصيل الملفات المضافة:</h5>
+        <!-- قسم تفاصيل الملفات المضافة مع حد 5 وعرض الكل -->
+        <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
+            <h5 class="mb-0">📁 تفاصيل الملفات المضافة:</h5>
+            {% if all_files|length > 5 %}
+            <button type="button" class="btn btn-outline-primary btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#allFilesModal">
+                🔍 عرض الكل ({{ all_files|length }})
+            </button>
+            {% endif %}
+        </div>
+
         <div class="table-responsive">
             <table class="table table-bordered table-striped text-center align-middle">
                 <thead>
@@ -193,7 +206,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for file in all_files[:8] %}
+                    {% for file in all_files[:5] %}
                     <tr>
                         <td>{{ file.title }}</td>
                         <td>{{ file.subject.name }}</td>
@@ -460,7 +473,7 @@
     </div>
 </div>
 
-<!-- Modal عرض كل المواد الدراسية -->
+<!-- Modal عرض كل المواد الدراسية (القديم) -->
 <div class="modal fade" id="subjectsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
@@ -489,6 +502,66 @@
                                     <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editSubjectModal{{ sub.id }}" data-bs-dismiss="modal">
                                         ✏️ تعديل
                                     </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal عرض كل المواد القائمة (الجديد الخاص بزر عرض الكل للمواد الحالية) -->
+<div class="modal fade" id="subjectsListModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">📚 جميع المواد الدراسية الحالية</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body scrollable-card-body">
+                <ul class="list-group">
+                    {% for sub in subjects %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="fw-bold text-primary">📖 {{ sub.name }} <span class="badge bg-secondary ms-1">(عدد الملفات: {{ sub.files|length }})</span></span>
+                        <span>{{ sub.description or 'لا يوجد وصف' }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal عرض كل الملفات (الجديد الخاص بزر عرض الكل للملفات المضافة) -->
+<div class="modal fade" id="allFilesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">📁 جميع الملفات المضافة</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body scrollable-card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped text-center align-middle">
+                        <thead>
+                            <tr>
+                                <th>عنوان الملف / المحاضرة</th>
+                                <th>المادة</th>
+                                <th>النوع</th>
+                                <th>الإجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for file in all_files %}
+                            <tr>
+                                <td>{{ file.title }}</td>
+                                <td>{{ file.subject.name }}</td>
+                                <td><span class="badge bg-secondary">{{ file.file_type }}</span></td>
+                                <td>
+                                    <a href="{{ file.file_path }}" target="_blank" class="btn btn-success btn-sm">🔗 فتح الملف</a>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -664,21 +737,5 @@
         </div>
     </div>
 </div>
-
-<!-- سكربت البحث البسيط المباشر للمواد -->
-<script>
-    document.getElementById('subjectSearchInput').addEventListener('keyup', function() {
-        let filter = this.value.toLowerCase();
-        let items = document.querySelectorAll('#subjectsList .subject-item');
-        items.forEach(function(item) {
-            let text = item.textContent.toLowerCase();
-            if (text.includes(filter)) {
-                item.style.display = '';
-            } else {
-                item.style.display = 'none';
-            }
-        });
-    });
-</script>
 
 {% endblock %}
