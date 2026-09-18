@@ -7,6 +7,19 @@
         min-height: 100vh;
     }
 
+    /* مربع العنوان الفخم والشيك */
+    .platform-header-box {
+        background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+        border: 2px solid #bae6fd;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px -5px rgba(56, 189, 248, 0.15);
+        transition: all 0.3s ease;
+    }
+    .platform-header-box:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 30px -5px rgba(56, 189, 248, 0.25);
+    }
+
     .platform-title {
         color: #0f172a;
         font-weight: 800;
@@ -71,12 +84,15 @@
 </style>
 
 <div class="container my-5">
-    <!-- عنوان المنصة -->
-    <div class="text-center mb-5">
-        <h2 class="platform-title mb-2" style="font-size: 2.2rem;">
-            منصة ترتيب الدفعة 🎓
-        </h2>
-        <p class="text-secondary fw-semibold">نظام إلكتروني متطور لإدارة وترتيب الطلاب بكل دقة</p>
+    <!-- مربع عنوان المنصة الفخم والشيك -->
+    <div class="row mb-5 justify-content-center">
+        <div class="col-lg-8">
+            <div class="platform-header-box p-4 text-center">
+                <h2 class="platform-title m-0" style="font-size: 2.2rem;">
+                    منصة ترتيب الدفعة 🎓
+                </h2>
+            </div>
+        </div>
     </div>
 
     <!-- نافذة عرض النتيجة (إن وجدت) -->
