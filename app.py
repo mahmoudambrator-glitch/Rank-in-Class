@@ -119,7 +119,8 @@ def track_visit():
 
 @app.route('/')
 def home():
-    subjects = Subject.query.all()
+    # جلب المواد مرتبة أبجديّاً
+    subjects = Subject.query.order_by(Subject.name.asc()).all()
     return render_template('home.html', subjects=subjects)
 
 @app.route('/subject/<int:subject_id>')
@@ -143,8 +144,9 @@ def open_file(file_id):
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
     total_visits = VisitLog.query.count()
-    subjects = Subject.query.all()
-    all_files = MaterialFile.query.all()
+    # جلب المواد والملفات مرتبة أبجديّاً لسهولة الإدارة
+    subjects = Subject.query.order_by(Subject.name.asc()).all()
+    all_files = MaterialFile.query.join(Subject).order_by(Subject.name.asc(), MaterialFile.title.asc()).all()
     recent_visits = VisitLog.query.order_by(VisitLog.timestamp.desc()).all()
     recent_trackings = TrackingLog.query.order_by(TrackingLog.timestamp.desc()).all()
     students = Student.query.order_by(Student.gpa.desc()).all()
@@ -193,6 +195,20 @@ def add_subject():
         flash('تم إضافة المادة بنجاح', 'success')
     return redirect(url_for('admin'))
 
+# تعديل مادة دراسية (مضافة حديثاً بدون حذف أي شيء)
+@app.route('/admin/edit_subject/<int:subject_id>', methods=['POST'])
+def edit_subject(subject_id):
+    subject = Subject.query.get_or_404(subject_id)
+    new_name = request.form.get('name')
+    description = request.form.get('description')
+    if new_name:
+        subject.name = new_name
+        if description is not None:
+            subject.description = description
+        db.session.commit()
+        flash('تم تعديل المادة بنجاح!', 'success')
+    return redirect(url_for('admin'))
+
 @app.route('/admin/add_file', methods=['POST'])
 def add_file():
     title = request.form.get('title')
@@ -220,6 +236,19 @@ def add_file():
     db.session.commit()
     flash('تم إضافة رابط الملف بنجاح!', 'success')
 
+    return redirect(url_for('admin'))
+
+# تعديل ملف دراسي (مضاف حديثاً بدون حذف أي شيء)
+@app.route('/admin/edit_file/<int:file_id>', methods=['POST'])
+def edit_file(file_id):
+    file_item = MaterialFile.query.get_or_404(file_id)
+    file_item.subject_id = request.form.get('subject_id')
+    file_item.title = request.form.get('title')
+    file_item.file_type = request.form.get('file_type')
+    file_item.file_path = request.form.get('drive_url')
+    
+    db.session.commit()
+    flash('تم تعديل الملف بنجاح!', 'success')
     return redirect(url_for('admin'))
 
 @app.route('/admin/delete_subject/<int:subject_id>', methods=['POST'])
