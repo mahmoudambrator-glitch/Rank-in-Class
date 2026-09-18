@@ -106,7 +106,6 @@ def track_visit():
             session['has_visited'] = True  # منع تكرار العد لنفس الجلسة أثناء التنقل
 
         # تحديث نوع الزائر لو قام بتسجيل الدخول أو الاستعلام كطالب لاحقاً
-        # (لتحديث اسم الزائر في آخر حركة تتبع)
         last_track = TrackingLog.query.filter_by(ip_address=request.remote_addr).order_by(TrackingLog.timestamp.desc()).first()
         
         if not last_track or last_track.action_performed != request.path or last_track.visitor_type != current_visitor:
@@ -135,7 +134,7 @@ def open_file(file_id):
     if file_item.file_path:
         return redirect(file_item.file_path)
     
-    flash('❌ الرابط المطلوبة غير موجود!', 'danger')
+    flash('❌ الرابط المطلوب غير موجود!', 'danger')
     return redirect(url_for('home'))
 
 
@@ -146,10 +145,10 @@ def admin():
     total_visits = VisitLog.query.count()
     subjects = Subject.query.all()
     all_files = MaterialFile.query.all()
-    recent_visits = VisitLog.query.order_by(VisitLog.timestamp.desc()).limit(20).all()
-    recent_trackings = TrackingLog.query.order_by(TrackingLog.timestamp.desc()).limit(30).all()
+    recent_visits = VisitLog.query.order_by(VisitLog.timestamp.desc()).all()
+    recent_trackings = TrackingLog.query.order_by(TrackingLog.timestamp.desc()).all()
     students = Student.query.order_by(Student.gpa.desc()).all()
-    student_activities = StudentActivityLog.query.order_by(StudentActivityLog.timestamp.desc()).limit(30).all()
+    student_activities = StudentActivityLog.query.order_by(StudentActivityLog.timestamp.desc()).all()
 
     return render_template(
         'admin.html',
