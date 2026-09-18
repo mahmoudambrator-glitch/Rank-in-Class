@@ -10,65 +10,73 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Google Fonts Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --transition-speed: 0.3s;
         }
 
         body { 
-            font-family: system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
-            background-color: #f8fafc;
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
             color: #1e293b;
         }
 
         .navbar-custom {
             background: var(--primary-gradient);
-            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.25);
+            box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.3);
             backdrop-filter: blur(10px);
+            padding: 15px 0;
         }
 
         .brand-title {
-            font-size: 1.15rem;
-            font-weight: 800;
+            font-size: 1.25rem;
+            font-weight: 900;
             letter-spacing: 0.5px;
             color: #ffffff !important;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.15);
         }
 
         .btn-custom-light {
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
             color: #ffffff;
-            font-weight: 600;
+            font-weight: 700;
             transition: all var(--transition-speed) ease;
             backdrop-filter: blur(5px);
+            border-radius: 50px;
+            padding: 8px 22px;
         }
 
         .btn-custom-light:hover {
             background: #ffffff;
-            color: #4f46e5;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            transform: translateY(-1px);
+            color: #764ba2;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
         }
 
         /* تحسين مظهر التنبيهات */
         .alert {
             border-radius: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border: none;
         }
     </style>
 </head>
 <body>
     <!-- شريط التنقل العلوي -->
-    <nav class="navbar navbar-dark navbar-custom sticky-top mb-4 py-3">
+    <nav class="navbar navbar-dark navbar-custom sticky-top mb-4">
         <div class="container d-flex justify-content-between align-items-center">
             <a class="navbar-brand brand-title m-0 d-flex align-items-center gap-2" href="{{ url_for('home') }}">
-                <i class="bi bi-journal-bookmark-fill"></i>
+                <i class="bi bi-journal-bookmark-fill fs-4"></i>
                 <span>مكتبة Ꭿ ᎷᏰ ᎡᎯ ᎿᏫᎡ</span>
             </a>
             <div class="d-flex align-items-center gap-2">
-                <a class="btn btn-custom-light btn-sm px-4 rounded-pill d-flex align-items-center gap-1" href="{{ url_for('student_ranking') }}">
+                <a class="btn btn-custom-light btn-sm d-flex align-items-center gap-1" href="{{ url_for('student_ranking') }}">
                     <i class="bi bi-trophy-fill"></i>
                     <span>ترتيب الدفعة</span>
                 </a>
@@ -77,11 +85,11 @@
     </nav>
 
     <!-- المحتوى الرئيسي -->
-    <main class="container py-2">
+    <main class="container py-2 mb-5">
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             {% for category, message in messages %}
-              <div class="alert alert-{{ category }} alert-dismissible fade show border-0" role="alert">
+              <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
                 <div class="d-flex align-items-center gap-2">
                     <i class="bi bi-info-circle-fill fs-5"></i>
                     <div>{{ message }}</div>
@@ -96,6 +104,6 @@
     </main>
 
     <!-- Bootstrap 5.3 JS Bundle -->
-    <script src="https://cdn.jsdelivr.5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
