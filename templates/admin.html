@@ -42,7 +42,7 @@
     <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
         <h4 class="mb-0">📚 إدارة المكتبة الدراسية (المواد والملفات)</h4>
         <button type="button" class="btn btn-light btn-sm text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#subjectsModal">
-            🔍 عرض الكل (المواد)
+            🔍 عرض الكل (المواد الكاملة)
         </button>
     </div>
     <div class="card-body">
@@ -85,7 +85,7 @@
             <button type="submit" class="btn btn-primary">حفظ وإضافة الرابط</button>
         </form>
 
-        <!-- قسم المواد الحالية مع تحديد 5 عناصر وعرض الكل -->
+        <!-- قسم المواد الحالية مع زر عرض الكل بجوار العنوان -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="mb-0">المواد الحالية والملفات:</h5>
             {% if subjects|length > 5 %}
@@ -185,7 +185,7 @@
             {% endfor %}
         </ul>
 
-        <!-- قسم تفاصيل الملفات المضافة مع حد 5 وعرض الكل -->
+        <!-- قسم تفاصيل الملفات المضافة مع زر عرض الكل بجوار العنوان -->
         <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
             <h5 class="mb-0">📁 تفاصيل الملفات المضافة:</h5>
             {% if all_files|length > 5 %}
@@ -473,7 +473,7 @@
     </div>
 </div>
 
-<!-- Modal عرض كل المواد الدراسية (القديم) -->
+<!-- Modal عرض كل المواد الدراسية -->
 <div class="modal fade" id="subjectsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
@@ -513,7 +513,7 @@
     </div>
 </div>
 
-<!-- Modal عرض كل المواد القائمة (الجديد الخاص بزر عرض الكل للمواد الحالية) -->
+<!-- Modal عرض كل المواد الحالية -->
 <div class="modal fade" id="subjectsListModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
@@ -535,7 +535,7 @@
     </div>
 </div>
 
-<!-- Modal عرض كل الملفات (الجديد الخاص بزر عرض الكل للملفات المضافة) -->
+<!-- Modal عرض كل الملفات المضافة -->
 <div class="modal fade" id="allFilesModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
