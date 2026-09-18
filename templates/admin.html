@@ -85,7 +85,7 @@
             <button type="submit" class="btn btn-primary">حفظ وإضافة الرابط</button>
         </form>
 
-        <!-- قسم المواد الحالية مع زر عرض الكل بجوار العنوان -->
+        <!-- قسم المواد الحالية مع زر عرض الكل بجوار العنوان وحد أقصى 5 -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="mb-0">المواد الحالية والملفات:</h5>
             {% if subjects|length > 5 %}
@@ -98,8 +98,8 @@
         <ul class="list-group mb-4" id="subjectsList">
             {% for sub in subjects[:5] %}
             <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2 subject-item">
-                <!-- النقر على اسم المادة يفتح ملفاتها مباشرة في مودال -->
-                <span class="fw-bold text-primary" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#subjectFilesModal{{ sub.id }}" title="اضغط لعرض ملفات المادة">
+                <!-- النقر على اسم المادة يفتح ملفاتها مباشرة مع عدد مرات الفتح -->
+                <span class="fw-bold text-primary" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#subjectFilesModal{{ sub.id }}" title="اضغط لعرض ملفات وتفاصيل المادة">
                     📖 {{ sub.name }} <span class="badge bg-secondary ms-1">(عدد الملفات: {{ sub.files|length }})</span>
                 </span>
                 
@@ -115,12 +115,12 @@
                 </div>
             </li>
 
-            <!-- مودال عرض ملفات المادة المحددة -->
+            <!-- مودال عرض ملفات وتفاصيل المادة وعدد مرات الفتح -->
             <div class="modal fade" id="subjectFilesModal{{ sub.id }}" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-dialog modal-xl modal-dialog-scrollable">
                     <div class="modal-content">
                         <div class="modal-header bg-primary text-white">
-                            <h5 class="modal-title">📁 ملفات مادة: {{ sub.name }}</h5>
+                            <h5 class="modal-title">📁 تفاصيل ملفات مادة: {{ sub.name }}</h5>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
@@ -129,9 +129,10 @@
                                 <table class="table table-bordered table-striped text-center align-middle">
                                     <thead>
                                         <tr>
-                                            <th>عنوان الملف</th>
+                                            <th>عنوان الملف / المحاضرة</th>
                                             <th>النوع</th>
-                                            <th>الرابط / الإجراء</th>
+                                            <th>عدد مرات الفتح</th>
+                                            <th>الإجراء</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -139,8 +140,20 @@
                                         <tr>
                                             <td class="fw-bold">{{ file.title }}</td>
                                             <td><span class="badge bg-info text-dark">{{ file.file_type }}</span></td>
+                                            <td><span class="badge bg-dark fs-6">{{ file.views_count if file.views_count is defined else 0 }} مرة</span></td>
                                             <td>
-                                                <a href="{{ file.file_path }}" target="_blank" class="btn btn-success btn-sm">🔗 فتح الملف</a>
+                                                <div class="d-flex justify-content-center gap-2">
+                                                    <a href="{{ file.file_path }}" target="_blank" class="btn btn-success btn-sm">🔗 فتح الملف</a>
+                                                    
+                                                    <!-- زر تعديل الملف -->
+                                                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editFileModal{{ file.id }}" data-bs-dismiss="modal">
+                                                        ✏️ تعديل
+                                                    </button>
+
+                                                    <form action="{{ url_for('delete_file', file_id=file.id) }}" method="POST" style="display:inline;">
+                                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('حذف الملف نهائياً؟')">حذف</button>
+                                                    </form>
+                                                </div>
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -184,95 +197,57 @@
             </div>
             {% endfor %}
         </ul>
-
-        <!-- قسم تفاصيل الملفات المضافة مع زر عرض الكل بجوار العنوان -->
-        <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-            <h5 class="mb-0">📁 تفاصيل الملفات المضافة:</h5>
-            {% if all_files|length > 5 %}
-            <button type="button" class="btn btn-outline-primary btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#allFilesModal">
-                🔍 عرض الكل ({{ all_files|length }})
-            </button>
-            {% endif %}
-        </div>
-
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped text-center align-middle">
-                <thead>
-                    <tr>
-                        <th>عنوان الملف / المحاضرة</th>
-                        <th>المادة</th>
-                        <th>النوع</th>
-                        <th>الإجراء</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for file in all_files[:5] %}
-                    <tr>
-                        <td>{{ file.title }}</td>
-                        <td>{{ file.subject.name }}</td>
-                        <td><span class="badge bg-secondary">{{ file.file_type }}</span></td>
-                        <td>
-                            <!-- زر تعديل الملف -->
-                            <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editFileModal{{ file.id }}">
-                                ✏️ تعديل
-                            </button>
-
-                            <form action="{{ url_for('delete_file', file_id=file.id) }}" method="POST" style="display:inline;">
-                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('حذف الملف نهائياً؟')">حذف</button>
-                            </form>
-                        </td>
-                    </tr>
-
-                    <!-- مودال تعديل الملف لكل ملف -->
-                    <div class="modal fade" id="editFileModal{{ file.id }}" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header bg-warning text-dark">
-                                    <h5 class="modal-title">✏️ تعديل الملف: {{ file.title }}</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <form action="{{ url_for('edit_file', file_id=file.id) }}" method="POST">
-                                    <div class="modal-body text-start">
-                                        <div class="mb-3">
-                                            <label class="form-label">المادة الدراسية</label>
-                                            <select name="subject_id" class="form-control" required>
-                                                {% for sub in subjects %}
-                                                <option value="{{ sub.id }}" {% if sub.id == file.subject_id %}selected{% endif %}>{{ sub.name }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">نوع الملف</label>
-                                            <select name="file_type" class="form-control">
-                                                <option value="ملخص" {% if file.file_type == 'ملخص' %}selected{% endif %}>ملخص</option>
-                                                <option value="محاضرة" {% if file.file_type == 'محاضرة' %}selected{% endif %}>محاضرة</option>
-                                                <option value="كتاب" {% if file.file_type == 'كتاب' %}selected{% endif %}>كتاب</option>
-                                                <option value="امتحان" {% if file.file_type == 'امتحان' %}selected{% endif %}>امتحان سابق</option>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">عنوان الملف</label>
-                                            <input type="text" name="title" value="{{ file.title }}" class="form-control" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">رابط Google Drive</label>
-                                            <input type="url" name="drive_url" value="{{ file.file_path }}" class="form-control" required>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                                        <button type="submit" class="btn btn-warning">حفظ التعديلات</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
     </div>
 </div>
+
+<!-- موديلات تعديل الملفات (تُوضع هنا لتعمل بكفاءة داخل النوافذ المنبثقة) -->
+{% for sub in subjects %}
+    {% for file in sub.files %}
+    <div class="modal fade" id="editFileModal{{ file.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">✏️ تعديل الملف: {{ file.title }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('edit_file', file_id=file.id) }}" method="POST">
+                    <div class="modal-body text-start">
+                        <div class="mb-3">
+                            <label class="form-label">المادة الدراسية</label>
+                            <select name="subject_id" class="form-control" required>
+                                {% for s in subjects %}
+                                <option value="{{ s.id }}" {% if s.id == file.subject_id %}selected{% endif %}>{{ s.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">نوع الملف</label>
+                            <select name="file_type" class="form-control">
+                                <option value="ملخص" {% if file.file_type == 'ملخص' %}selected{% endif %}>ملخص</option>
+                                <option value="محاضرة" {% if file.file_type == 'محاضرة' %}selected{% endif %}>محاضرة</option>
+                                <option value="كتاب" {% if file.file_type == 'كتاب' %}selected{% endif %}>كتاب</option>
+                                <option value="امتحان" {% if file.file_type == 'امتحان' %}selected{% endif %}>امتحان سابق</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">عنوان الملف</label>
+                            <input type="text" name="title" value="{{ file.title }}" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">رابط Google Drive</label>
+                            <input type="url" name="drive_url" value="{{ file.file_path }}" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-warning">حفظ التعديلات</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% endfor %}
 
 <!-- إدارة الطلاب -->
 <div class="card mb-5 shadow-sm">
@@ -530,44 +505,6 @@
                     </li>
                     {% endfor %}
                 </ul>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal عرض كل الملفات المضافة -->
-<div class="modal fade" id="allFilesModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">📁 جميع الملفات المضافة</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body scrollable-card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-striped text-center align-middle">
-                        <thead>
-                            <tr>
-                                <th>عنوان الملف / المحاضرة</th>
-                                <th>المادة</th>
-                                <th>النوع</th>
-                                <th>الإجراء</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for file in all_files %}
-                            <tr>
-                                <td>{{ file.title }}</td>
-                                <td>{{ file.subject.name }}</td>
-                                <td><span class="badge bg-secondary">{{ file.file_type }}</span></td>
-                                <td>
-                                    <a href="{{ file.file_path }}" target="_blank" class="btn btn-success btn-sm">🔗 فتح الملف</a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
             </div>
         </div>
     </div>
