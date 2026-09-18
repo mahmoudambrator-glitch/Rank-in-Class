@@ -7,7 +7,7 @@
         min-height: 100vh;
     }
 
-    /* مربع رأس المادة بتنسيق فخم ومميز */
+    /* مربع رأس المادة بتنسيق فخم تماماً مثل الصورة التي صممتها */
     .subject-header-card {
         background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
         border: 2px solid #bfdbfe;
@@ -34,18 +34,38 @@
         transform: translateY(-3px);
         box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.08);
     }
+
+    /* تنسيق زر العودة للرئيسية */
+    .btn-back-home {
+        background: linear-gradient(135deg, #475569 0%, #334155 100%);
+        border: none;
+        color: white;
+        transition: all 0.3s ease;
+    }
+    .btn-back-home:hover {
+        background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(51, 65, 85, 0.3);
+    }
 </style>
 
 <div class="container my-4">
+    <!-- مربع رأس المادة بتصميم الصورة -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="p-4 subject-header-card shadow-sm">
-                <h2 class="fw-bold text-primary mb-1">📚 مادة: {{ subject.name }}</h2>
-                <p class="text-muted mb-0">{{ subject.description or 'استعرض كافة الملخصات والمحاضرات الخاصة بهذه المادة مرتبة أبجدياً بكل سهولة' }}</p>
+            <div class="p-4 subject-header-card shadow-sm d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div>
+                    <h2 class="fw-bold text-primary mb-1">مادة: {{ subject.name }}</h2>
+                    <p class="text-muted mb-0">{{ subject.description or 'استعرض كافة الملخصات والمحاضرات الخاصة بهذه المادة مرتبة أبجدياً بكل سهولة' }}</p>
+                </div>
+                <div class="fs-1 text-primary">
+                    <i class="bi bi-journals"></i>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- قسم الملفات المتاحة الملونة -->
     <div class="row">
         <div class="col-12">
             <h4 class="mb-3 fw-bold text-dark">الملفات المتاحة:</h4>
@@ -79,8 +99,11 @@
         </div>
     </div>
     
+    <!-- زر العودة إلى الرئيسية -->
     <div class="mt-4">
-        <a href="{{ url_for('home') }}" class="btn btn-secondary rounded-pill px-4 fw-bold shadow-sm">← العودة إلى الرئيسية</a>
+        <a href="{{ url_for('home') }}" class="btn btn-back-home rounded-pill px-4 fw-bold shadow-sm py-2">
+            ← العودة إلى الرئيسية
+        </a>
     </div>
 </div>
 {% endblock %}
