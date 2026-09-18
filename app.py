@@ -41,7 +41,7 @@ class MaterialFile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(150), nullable=False)
     file_type = db.Column(db.String(50))
-    file_path = db.Column(db.String(500), nullable=False) # يخزن رابط Google Drive هنا
+    file_path = db.Column(db.String(500), nullable=False)
     views_count = db.Column(db.Integer, default=0)
     subject_id = db.Column(
         db.Integer, db.ForeignKey('subject.id'), nullable=False
@@ -54,7 +54,6 @@ class Student(db.Model):
     gpa = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), default="approved")
 
-# جدول زيارات الموقع (مرة لكل دخول جلسة جديدة)
 class VisitLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     visitor_type = db.Column(db.String(50), default="زائر عام") 
@@ -62,7 +61,6 @@ class VisitLog(db.Model):
     timestamp = db.Column(db.DateTime, default=lambda: datetime.now(ZoneInfo("Africa/Cairo")))
     page_visited = db.Column(db.String(200), default='دخول الموقع')
 
-# جدول التتبع والتحركات التفصيلية
 class TrackingLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     visitor_type = db.Column(db.String(50), default="زائر عام") 
@@ -86,15 +84,12 @@ import uuid
 @app.before_request
 def track_visit():
     if not request.path.startswith('/static') and not request.path.startswith('/admin') and 'favicon.ico' not in request.path:
-        
-        # إنشاء معرف فريد لكل متصفح/جلسة لو مش موجود (حتى لو تشابهت الـ IPs)
         if 'visitor_uuid' not in session:
             session['visitor_uuid'] = str(uuid.uuid4())
             session['has_visited'] = False
 
         current_visitor = session.get('student_name') or 'زائر عام'
 
-        # لو الجلسة دي لسه مَسجلتش زيارة رئيسية للموقع
         if not session.get('has_visited'):
             visit = VisitLog(
                 visitor_type=current_visitor,
@@ -103,9 +98,8 @@ def track_visit():
             )
             db.session.add(visit)
             db.session.commit()
-            session['has_visited'] = True  # منع تكرار العد لنفس الجلسة أثناء التنقل
+            session['has_visited'] = True
 
-        # تحديث نوع الزائر لو قام بتسجيل الدخول أو الاستعلام كطالب لاحقاً
         last_track = TrackingLog.query.filter_by(ip_address=request.remote_addr).order_by(TrackingLog.timestamp.desc()).first()
         
         if not last_track or last_track.action_performed != request.path or last_track.visitor_type != current_visitor:
@@ -119,7 +113,6 @@ def track_visit():
 
 @app.route('/')
 def home():
-    # جلب المواد مرتبة أبجديّاً
     subjects = Subject.query.order_by(Subject.name.asc()).all()
     return render_template('home.html', subjects=subjects)
 
@@ -130,13 +123,10 @@ def subject_detail(subject_id):
 
 @app.route('/open_file/<int:file_id>')
 def open_file(file_id):
-    """زيادة عدد مرات الفتح وتوجه الطالب مباشرة إلى رابط Google Drive في تاب جديد"""
     file_item = MaterialFile.query.get_or_404(file_id)
     if file_item.file_path:
-        # زيادة عدد مرات الفتح بواقع 1 وحفظ التغيير
         file_item.views_count = (file_item.views_count or 0) + 1
         db.session.commit()
-        
         return redirect(file_item.file_path)
     
     flash('❌ الرابط المطلوب غير موجود!', 'danger')
@@ -145,7 +135,6 @@ def open_file(file_id):
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
     total_visits = VisitLog.query.count()
-    # جلب المواد والملفات مرتبة أبجديّاً لسهولة الإدارة
     subjects = Subject.query.order_by(Subject.name.asc()).all()
     all_files = MaterialFile.query.join(Subject).order_by(Subject.name.asc(), MaterialFile.title.asc()).all()
     recent_visits = VisitLog.query.order_by(VisitLog.timestamp.desc()).all()
@@ -196,7 +185,6 @@ def add_subject():
         flash('تم إضافة المادة بنجاح', 'success')
     return redirect(url_for('admin'))
 
-# تعديل مادة دراسية (مضافة حديثاً بدون حذف أي شيء)
 @app.route('/admin/edit_subject/<int:subject_id>', methods=['POST'])
 def edit_subject(subject_id):
     subject = Subject.query.get_or_404(subject_id)
@@ -239,7 +227,6 @@ def add_file():
 
     return redirect(url_for('admin'))
 
-# تعديل ملف دراسي (مضاف حديثاً بدون حذف أي شيء)
 @app.route('/admin/edit_file/<int:file_id>', methods=['POST'])
 def edit_file(file_id):
     file_item = MaterialFile.query.get_or_404(file_id)
@@ -267,8 +254,6 @@ def delete_file(file_id):
     db.session.commit()
     flash('تم حذف الملف بنجاح', 'success')
     return redirect(url_for('admin'))
-
-# --- مسارات منصة ترتيب الدفعة ---
 
 @app.route("/ranking", methods=["GET", "POST"])
 def student_ranking():
@@ -364,6 +349,48 @@ def update_student_gpa(id):
     except ValueError:
         flash("❌ يرجى إدخال رقم صحيح للـ GPA", "danger")
     return redirect("/admin")
+
+@app.route('/admin/import-batch-students', methods=['POST'])
+def import_batch_students():
+    students_data = [
+        {"name": "هدير علاء محمد", "nat_id": "30708182700468", "gpa": 3.33},
+        {"name": "رحمة فتحي ابو المجد", "nat_id": "30704072700289", "gpa": 3.24},
+        {"name": "مي محمد العبادي", "nat_id": "30701082703744", "gpa": 3.17},
+        {"name": "سمية سيد احمد", "nat_id": "29408012707426", "gpa": 3.08},
+        {"name": "آية أحمد عيد أحمد", "nat_id": "29403212103345", "gpa": 2.83},
+        {"name": "محمود خلف الله احمد", "nat_id": "30702012711416", "gpa": 2.80},
+        {"name": "دينا عبد الحميد ابو المجد", "nat_id": "30706092700644", "gpa": 2.79},
+        {"name": "منة الله حمدي", "nat_id": "30608072701006", "gpa": 2.76},
+        {"name": "شهد حسن محمد احمد", "nat_id": "30709152701261", "gpa": 2.65},
+        {"name": "شهد علي نجار محمد", "nat_id": "30703262700246", "gpa": 2.62},
+        {"name": "ولاء احمد محمود", "nat_id": "30404012710443", "gpa": 2.58},
+        {"name": "إيمان فوزي عبد السلام", "nat_id": "30708162700607", "gpa": 2.53},
+        {"name": "اسراء سليم محمد", "nat_id": "30709012708266", "gpa": 2.49},
+        {"name": "روان عبدالله على", "nat_id": "30709082702427", "gpa": 2.29},
+        {"name": "إيمان رشاد محمود قاعود", "nat_id": "30709272700706", "gpa": 2.18},
+        {"name": "نورا احمد جابر سيد", "nat_id": "30708012707964", "gpa": 1.90}
+    ]
+
+    added_count = 0
+    skipped_count = 0
+
+    for data in students_data:
+        existing_student = Student.query.filter_by(nat_id=data["nat_id"]).first()
+        if not existing_student:
+            new_student = Student(
+                name=data["name"],
+                nat_id=data["nat_id"],
+                gpa=data["gpa"],
+                status="approved"
+            )
+            db.session.add(new_student)
+            added_count += 1
+        else:
+            skipped_count += 1
+
+    db.session.commit()
+    flash(f"🚀 تمت العملية بنجاح! تم إضافة {added_count} طالباً، وتخطي {skipped_count} لكونهم مسجلين مسبقاً.", "success")
+    return redirect(url_for('admin'))
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
