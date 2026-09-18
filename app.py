@@ -350,47 +350,5 @@ def update_student_gpa(id):
         flash("❌ يرجى إدخال رقم صحيح للـ GPA", "danger")
     return redirect("/admin")
 
-@app.route('/admin/import-batch-students', methods=['POST'])
-def import_batch_students():
-    students_data = [
-        {"name": "هدير علاء محمد", "nat_id": "30708182700468", "gpa": 3.33},
-        {"name": "رحمة فتحي ابو المجد", "nat_id": "30704072700289", "gpa": 3.24},
-        {"name": "مي محمد العبادي", "nat_id": "30701082703744", "gpa": 3.17},
-        {"name": "سمية سيد احمد", "nat_id": "29408012707426", "gpa": 3.08},
-        {"name": "آية أحمد عيد أحمد", "nat_id": "29403212103345", "gpa": 2.83},
-        {"name": "محمود خلف الله احمد", "nat_id": "30702012711416", "gpa": 2.80},
-        {"name": "دينا عبد الحميد ابو المجد", "nat_id": "30706092700644", "gpa": 2.79},
-        {"name": "منة الله حمدي", "nat_id": "30608072701006", "gpa": 2.76},
-        {"name": "شهد حسن محمد احمد", "nat_id": "30709152701261", "gpa": 2.65},
-        {"name": "شهد علي نجار محمد", "nat_id": "30703262700246", "gpa": 2.62},
-        {"name": "ولاء احمد محمود", "nat_id": "30404012710443", "gpa": 2.58},
-        {"name": "إيمان فوزي عبد السلام", "nat_id": "30708162700607", "gpa": 2.53},
-        {"name": "اسراء سليم محمد", "nat_id": "30709012708266", "gpa": 2.49},
-        {"name": "روان عبدالله على", "nat_id": "30709082702427", "gpa": 2.29},
-        {"name": "إيمان رشاد محمود قاعود", "nat_id": "30709272700706", "gpa": 2.18},
-        {"name": "نورا احمد جابر سيد", "nat_id": "30708012707964", "gpa": 1.90}
-    ]
-
-    added_count = 0
-    skipped_count = 0
-
-    for data in students_data:
-        existing_student = Student.query.filter_by(nat_id=data["nat_id"]).first()
-        if not existing_student:
-            new_student = Student(
-                name=data["name"],
-                nat_id=data["nat_id"],
-                gpa=data["gpa"],
-                status="approved"
-            )
-            db.session.add(new_student)
-            added_count += 1
-        else:
-            skipped_count += 1
-
-    db.session.commit()
-    flash(f"🚀 تمت العملية بنجاح! تم إضافة {added_count} طالباً، وتخطي {skipped_count} لكونهم مسجلين مسبقاً.", "success")
-    return redirect(url_for('admin'))
-
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
