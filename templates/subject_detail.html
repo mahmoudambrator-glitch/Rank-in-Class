@@ -1,44 +1,105 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container my-5">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h2 class="fw-bold text-primary">📚 مادة: {{ subject.name }}</h2>
-            <hr>
+<style>
+    .subject-header-card {
+        background: #ffffff;
+        border-radius: 18px;
+        padding: 30px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.04);
+        border-right: 6px solid #667eea;
+    }
+    .file-item-card {
+        background: #ffffff;
+        border-radius: 14px;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        border: 1px solid rgba(0,0,0,0.02);
+    }
+    .file-item-card:hover {
+        transform: scale(1.01);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+    }
+    .btn-open-file {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border-radius: 50px;
+        padding: 8px 22px;
+        font-weight: 700;
+        border: none;
+        transition: all 0.2s;
+    }
+    .btn-open-file:hover {
+        color: white;
+        opacity: 0.9;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    .btn-back-custom {
+        background: #e2e8f0;
+        color: #475569;
+        border-radius: 50px;
+        padding: 10px 25px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-back-custom:hover {
+        background: #cbd5e1;
+        color: #1e293b;
+    }
+</style>
+
+<div class="container px-0">
+    <!-- هيدر تفاصيل المادة -->
+    <div class="subject-header-card mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h2 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                <i class="bi bi-journal-text text-primary"></i> مادة: {{ subject.name }}
+            </h2>
+            <p class="text-muted mb-0">استعرض كافة الملخصات والمحاضرات الخاصة بهذه المادة بكل سهولة</p>
         </div>
     </div>
 
+    <!-- الملفات المتاحة -->
+    <h4 class="mb-3 fw-bold text-dark"><i class="bi bi-folder-fill ms-2 text-warning"></i> الملفات المتاحة:</h4>
+
     <div class="row">
         <div class="col-12">
-            <h4 class="mb-3">الملفات المتاحة:</h4>
-            
             {% if subject.files %}
-            <div class="list-group shadow-sm">
+            <div class="d-flex flex-column gap-3">
                 {% for file in subject.files %}
-                <div class="list-group-item d-flex justify-content-between align-items-center p-3">
-                    <div>
-                        <span class="badge bg-secondary me-2">{{ file.file_type }}</span>
-                        <strong class="fs-5">{{ file.title }}</strong>
+                <div class="file-item-card d-flex justify-content-between align-items-center p-3 px-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="bi bi-file-earmark-pdf-fill text-danger fs-3"></i>
+                        <div>
+                            <strong class="fs-6 d-block text-dark mb-1">{{ file.title }}</strong>
+                            <span class="badge bg-secondary opacity-75 fw-normal">{{ file.file_type }}</span>
+                        </div>
                     </div>
                     <div>
                         <!-- زر فتح الملف في صفحة جديدة (تاب جديد) بدون تنزيل -->
-                        <a href="{{ url_for('open_file', file_id=file.id) }}" target="_blank" class="btn btn-outline-primary btn-sm px-4 fw-bold">
-                            فتح الملف
+                        <a href="{{ url_for('open_file', file_id=file.id) }}" target="_blank" class="btn btn-open-file btn-sm">
+                            <i class="bi bi-box-arrow-up-right ms-1"></i> فتح الملف
                         </a>
                     </div>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <div class="alert alert-warning text-center py-4">
-                <h5>عذراً، لا توجد ملفات مرفوعة لهذه المادة حتى الآن.</h5>
+            <div class="alert alert-warning text-center py-5 rounded-4 shadow-sm">
+                <i class="bi bi-exclamation-triangle-fill fs-3 mb-2 d-block text-warning"></i>
+                <h5 class="mb-0 text-muted">عذراً، لا توجد ملفات مرفوعة لهذه المادة حتى الآن.</h5>
             </div>
             {% endif %}
         </div>
     </div>
     
     <div class="mt-4">
-        <a href="{{ url_for('home') }}" class="btn btn-secondary">← العودة إلى الرئيسية</a>
+        <a href="{{ url_for('home') }}" class="btn-back-custom">
+            <i class="bi bi-arrow-right"></i> العودة إلى الرئيسية
+        </a>
     </div>
 </div>
 {% endblock %}
