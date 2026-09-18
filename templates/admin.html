@@ -39,20 +39,15 @@
 
 <!-- إدارة المكتبة -->
 <div class="card mb-5 shadow-sm">
-    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+    <div class="card-header bg-dark text-white">
         <h4 class="mb-0">📚 إدارة المكتبة الدراسية (المواد والملفات)</h4>
-        <button type="button" class="btn btn-light btn-sm text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#subjectsModal">
-            🔍 عرض الكل (المواد الكاملة)
-        </button>
     </div>
     <div class="card-body">
+        <!-- نموذج إضافة مادة دراسية جديدة (بدون وصف) -->
         <form action="{{ url_for('add_subject') }}" method="POST" class="mb-4 p-3 bg-light rounded">
             <h5>إضافة مادة دراسية جديدة</h5>
             <div class="mb-3">
                 <input type="text" name="name" class="form-control" placeholder="اسم المادة" required>
-            </div>
-            <div class="mb-3">
-                <textarea name="description" class="form-control" placeholder="وصف المادة (اختياري)"></textarea>
             </div>
             <button type="submit" class="btn btn-success">إضافة المادة</button>
         </form>
@@ -98,7 +93,7 @@
         <ul class="list-group mb-4" id="subjectsList">
             {% for sub in subjects[:5] %}
             <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2 subject-item">
-                <!-- النقر على اسم المادة يفتح ملفاتها مباشرة مع عدد مرات الفتح -->
+                <!-- النقر على اسم المادة يفتح ملفاتها وتفاصيلها وعدد مرات الفتح -->
                 <span class="fw-bold text-primary" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#subjectFilesModal{{ sub.id }}" title="اضغط لعرض ملفات وتفاصيل المادة">
                     📖 {{ sub.name }} <span class="badge bg-secondary ms-1">(عدد الملفات: {{ sub.files|length }})</span>
                 </span>
@@ -168,7 +163,7 @@
                 </div>
             </div>
 
-            <!-- مودال تعديل المادة لكل مادة -->
+            <!-- مودال تعديل المادة لكل مادة (بدون وصف) -->
             <div class="modal fade" id="editSubjectModal{{ sub.id }}" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -181,10 +176,6 @@
                                 <div class="mb-3">
                                     <label class="form-label">اسم المادة</label>
                                     <input type="text" name="name" value="{{ sub.name }}" class="form-control" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">وصف المادة</label>
-                                    <textarea name="description" class="form-control">{{ sub.description or '' }}</textarea>
                                 </div>
                             </div>
                             <div class="modal-footer">
@@ -200,7 +191,7 @@
     </div>
 </div>
 
-<!-- موديلات تعديل الملفات (تُوضع هنا لتعمل بكفاءة داخل النوافذ المنبثقة) -->
+<!-- موديلات تعديل الملفات -->
 {% for sub in subjects %}
     {% for file in sub.files %}
     <div class="modal fade" id="editFileModal{{ file.id }}" tabindex="-1" aria-hidden="true">
@@ -448,46 +439,6 @@
     </div>
 </div>
 
-<!-- Modal عرض كل المواد الدراسية -->
-<div class="modal fade" id="subjectsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title">📚 قائمة المواد الدراسية الكاملة</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body scrollable-card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-striped text-center align-middle">
-                        <thead>
-                            <tr>
-                                <th>اسم المادة</th>
-                                <th>عدد الملفات</th>
-                                <th>وصف المادة</th>
-                                <th>الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for sub in subjects %}
-                            <tr>
-                                <td class="fw-bold">{{ sub.name }}</td>
-                                <td><span class="badge bg-primary">{{ sub.files|length }}</span></td>
-                                <td>{{ sub.description or 'لا يوجد وصف' }}</td>
-                                <td>
-                                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editSubjectModal{{ sub.id }}" data-bs-dismiss="modal">
-                                        ✏️ تعديل
-                                    </button>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Modal عرض كل المواد الحالية -->
 <div class="modal fade" id="subjectsListModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
@@ -501,7 +452,6 @@
                     {% for sub in subjects %}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         <span class="fw-bold text-primary">📖 {{ sub.name }} <span class="badge bg-secondary ms-1">(عدد الملفات: {{ sub.files|length }})</span></span>
-                        <span>{{ sub.description or 'لا يوجد وصف' }}</span>
                     </li>
                     {% endfor %}
                 </ul>
