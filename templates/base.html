@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مكتبة AMBRATOR</title>
+    <title>مكتبة Ꭿ ᎷᏰ ᎡᎯ ᎿᏫᎡ</title>
     <!-- ربط ملف البيان لتطبيق الـ PWA -->
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <!-- Bootstrap 5.3 RTL CSS -->
@@ -12,8 +12,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
         :root {
-            --dark-navy-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            --gold-accent: #f59e0b;
             --transition-speed: 0.3s;
         }
 
@@ -23,7 +21,7 @@
             color: #1e293b;
         }
 
-        /* شريط التنقل العلوي بتدرج كحلي داكن فاخر تماماً مثل الصورة */
+        /* شريط التنقل العلوي بتدرج كحلي داكن فاخر */
         .navbar-custom {
             background: linear-gradient(135deg, #09101d 0%, #172554 100%);
             box-shadow: 0 10px 25px -5px rgba(9, 16, 29, 0.4);
@@ -69,26 +67,26 @@
     <nav class="navbar navbar-dark navbar-custom sticky-top mb-4 py-3">
         <div class="container d-flex justify-content-between align-items-center">
             
-            <!-- زر ترتيب الدفعة على اليسار -->
-            <div class="d-flex align-items-center">
-                <a class="btn btn-gold-outline btn-sm d-flex align-items-center gap-2" href="{{ url_for('student_ranking') }}">
-                    <span>ترتيب الدفعة</span>
-                    <i class="bi bi-trophy-fill text-warning fs-6"></i>
-                </a>
-            </div>
-
-            <!-- عنوان المكتبة واسم AMBRATOR مع أيقونة الكتاب باللون الذهبي على اليمين -->
-            <a class="navbar-brand brand-title m-0 text-end text-decoration-none" href="{{ url_for('home') }}">
+            <!-- مكتبة Ꭿ ᎷᏰ ᎡᎯ ᎿᏫᎡ على اليسار -->
+            <a class="navbar-brand brand-title m-0 text-decoration-none" href="{{ url_for('home') }}">
                 <div class="d-flex align-items-center gap-2">
-                    <div>
-                        <div class="fs-6 fw-bold" style="color: #cbd5e1; font-size: 0.85rem !important;">مكتبة</div>
-                        <div class="text-white tracking-wider" style="font-size: 1.05rem;">AMBRATOR</div>
-                    </div>
                     <div class="fs-3 text-warning">
                         <i class="bi bi-journal-bookmark-fill"></i>
                     </div>
+                    <div>
+                        <div class="fs-6 fw-bold" style="color: #cbd5e1; font-size: 0.85rem !important;">مكتبة</div>
+                        <div class="text-white tracking-wider" style="font-size: 1.05rem;">Ꭿ ᎷᏰ ᎡᎯ ᎿᏫᎡ</div>
+                    </div>
                 </div>
             </a>
+
+            <!-- زر ترتيب الدفعة على اليمين -->
+            <div class="d-flex align-items-center">
+                <a class="btn btn-gold-outline btn-sm d-flex align-items-center gap-2" href="{{ url_for('student_ranking') }}">
+                    <i class="bi bi-trophy-fill text-warning fs-6"></i>
+                    <span>ترتيب الدفعة</span>
+                </a>
+            </div>
 
         </div>
     </nav>
