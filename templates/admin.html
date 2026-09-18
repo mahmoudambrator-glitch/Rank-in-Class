@@ -39,8 +39,11 @@
 
 <!-- إدارة المكتبة -->
 <div class="card mb-5 shadow-sm">
-    <div class="card-header bg-dark text-white">
-        <h4>📚 إدارة المكتبة الدراسية (المواد والملفات)</h4>
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">📚 إدارة المكتبة الدراسية (المواد والملفات)</h4>
+        <button type="button" class="btn btn-light btn-sm text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#subjectsModal">
+            🔍 عرض الكل (المواد)
+        </button>
     </div>
     <div class="card-body">
         <form action="{{ url_for('add_subject') }}" method="POST" class="mb-4 p-3 bg-light rounded">
@@ -82,11 +85,19 @@
             <button type="submit" class="btn btn-primary">حفظ وإضافة الرابط</button>
         </form>
 
+        <!-- خانة البحث السريع في المواد -->
+        <div class="mb-3">
+            <input type="text" id="subjectSearchInput" class="form-control" placeholder="🔍 ابحث عن اسم المادة هنا...">
+        </div>
+
         <h5>المواد الحالية والملفات:</h5>
-        <ul class="list-group mb-4">
+        <ul class="list-group mb-4" id="subjectsList">
             {% for sub in subjects %}
-            <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <span><strong>{{ sub.name }}</strong> (عدد الملفات: {{ sub.files|length }})</span>
+            <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2 subject-item">
+                <!-- النقر على اسم المادة يفتح ملفاتها مباشرة في مودال -->
+                <span class="fw-bold text-primary" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#subjectFilesModal{{ sub.id }}" title="اضغط لعرض ملفات المادة">
+                    📖 {{ sub.name }} <span class="badge bg-secondary ms-1">(عدد الملفات: {{ sub.files|length }})</span>
+                </span>
                 
                 <div class="d-flex gap-2">
                     <!-- زر تعديل المادة -->
@@ -99,6 +110,46 @@
                     </form>
                 </div>
             </li>
+
+            <!-- مودال عرض ملفات المادة المحددة -->
+            <div class="modal fade" id="subjectFilesModal{{ sub.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title">📁 ملفات مادة: {{ sub.name }}</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            {% if sub.files %}
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped text-center align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>عنوان الملف</th>
+                                            <th>النوع</th>
+                                            <th>الرابط / الإجراء</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for file in sub.files %}
+                                        <tr>
+                                            <td class="fw-bold">{{ file.title }}</td>
+                                            <td><span class="badge bg-info text-dark">{{ file.file_type }}</span></td>
+                                            <td>
+                                                <a href="{{ file.file_path }}" target="_blank" class="btn btn-success btn-sm">🔗 فتح الملف</a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <p class="text-muted text-center py-3">لا توجد ملفات مرفوعة لهذه المادة حتى الآن.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- مودال تعديل المادة لكل مادة -->
             <div class="modal fade" id="editSubjectModal{{ sub.id }}" tabindex="-1" aria-hidden="true">
@@ -409,6 +460,46 @@
     </div>
 </div>
 
+<!-- Modal عرض كل المواد الدراسية -->
+<div class="modal fade" id="subjectsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">📚 قائمة المواد الدراسية الكاملة</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body scrollable-card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped text-center align-middle">
+                        <thead>
+                            <tr>
+                                <th>اسم المادة</th>
+                                <th>عدد الملفات</th>
+                                <th>وصف المادة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sub in subjects %}
+                            <tr>
+                                <td class="fw-bold">{{ sub.name }}</td>
+                                <td><span class="badge bg-primary">{{ sub.files|length }}</span></td>
+                                <td>{{ sub.description or 'لا يوجد وصف' }}</td>
+                                <td>
+                                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editSubjectModal{{ sub.id }}" data-bs-dismiss="modal">
+                                        ✏️ تعديل
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal عرض كل الطلاب -->
 <div class="modal fade" id="studentsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
@@ -573,5 +664,21 @@
         </div>
     </div>
 </div>
+
+<!-- سكربت البحث البسيط المباشر للمواد -->
+<script>
+    document.getElementById('subjectSearchInput').addEventListener('keyup', function() {
+        let filter = this.value.toLowerCase();
+        let items = document.querySelectorAll('#subjectsList .subject-item');
+        items.forEach(function(item) {
+            let text = item.textContent.toLowerCase();
+            if (text.includes(filter)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+</script>
 
 {% endblock %}
