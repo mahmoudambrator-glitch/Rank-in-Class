@@ -295,7 +295,6 @@
                         </td>
                         <td>{{ track.ip_address }}</td>
                         <td>
-                            <!-- الترجمة التلقائية للمسارات بالعربي -->
                             {% if track.action_performed == '/' %}
                                 <span class="badge bg-primary">الصفحة الرئيسية للمكتبة</span>
                             {% elif track.action_performed.startswith('/subject/') %}
@@ -317,6 +316,87 @@
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal عرض كل الطلاب -->
+<div class="modal fade" id="studentsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-secondary text-white">
+                <h5 class="modal-title">🎓 قائمة الطلاب الكاملة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body scrollable-card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped text-center align-middle">
+                        <thead>
+                            <tr>
+                                <th>الاسم ثلاثي</th>
+                                <th>الرقم القومي</th>
+                                <th>الـ GPA</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr>
+                                <td>{{ student.name }}</td>
+                                <td>{{ student.nat_id }}</td>
+                                <td>
+                                    <form action="{{ url_for('update_student_gpa', id=student.id) }}" method="POST" class="d-inline-flex gap-1 justify-content-center">
+                                        <input type="number" step="0.01" name="gpa" value="{{ student.gpa }}" class="form-control form-control-sm" style="width: 90px;" required>
+                                        <button type="submit" class="btn btn-warning btn-sm">تحديث</button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form action="{{ url_for('delete_student', id=student.id) }}" method="POST" style="display:inline;">
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('حذف الطالب نهائياً؟')">حذف</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal عرض كل الأنشطة -->
+<div class="modal fade" id="activitiesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">📋 سجل نشاط الطلاب الكامل</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body scrollable-card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped text-center align-middle">
+                        <thead>
+                            <tr>
+                                <th>اسم الطالب</th>
+                                <th>الرقم القومي</th>
+                                <th>نوع الإجراء</th>
+                                <th>الوقت والتاريخ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in student_activities %}
+                            <tr>
+                                <td class="fw-bold">{{ activity.student_name }}</td>
+                                <td>{{ activity.nat_id }}</td>
+                                <td>{{ activity.action_type }}</td>
+                                <td>{{ activity.timestamp.strftime('%Y-%m-%d %I:%M %p') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
