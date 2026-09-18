@@ -43,7 +43,7 @@
         <h4 class="mb-0">📚 إدارة المكتبة الدراسية (المواد والملفات)</h4>
     </div>
     <div class="card-body">
-        <!-- نموذج إضافة مادة دراسية جديدة (بدون وصف) -->
+        <!-- نموذج إضافة مادة دراسية جديدة -->
         <form action="{{ url_for('add_subject') }}" method="POST" class="mb-4 p-3 bg-light rounded">
             <h5>إضافة مادة دراسية جديدة</h5>
             <div class="mb-3">
@@ -93,13 +93,11 @@
         <ul class="list-group mb-4" id="subjectsList">
             {% for sub in subjects[:5] %}
             <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2 subject-item">
-                <!-- النقر على اسم المادة يفتح ملفاتها وتفاصيلها وعدد مرات الفتح -->
                 <span class="fw-bold text-primary" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#subjectFilesModal{{ sub.id }}" title="اضغط لعرض ملفات وتفاصيل المادة">
                     📖 {{ sub.name }} <span class="badge bg-secondary ms-1">(عدد الملفات: {{ sub.files|length }})</span>
                 </span>
                 
                 <div class="d-flex gap-2">
-                    <!-- زر تعديل المادة -->
                     <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editSubjectModal{{ sub.id }}">
                         ✏️ تعديل
                     </button>
@@ -110,7 +108,7 @@
                 </div>
             </li>
 
-            <!-- مودال عرض ملفات وتفاصيل المادة وعدد مرات الفتح -->
+            <!-- مودال عرض ملفات وتفاصيل المادة -->
             <div class="modal fade" id="subjectFilesModal{{ sub.id }}" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-xl modal-dialog-scrollable">
                     <div class="modal-content">
@@ -140,7 +138,6 @@
                                                 <div class="d-flex justify-content-center gap-2">
                                                     <a href="{{ file.file_path }}" target="_blank" class="btn btn-success btn-sm">🔗 فتح الملف</a>
                                                     
-                                                    <!-- زر تعديل الملف -->
                                                     <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editFileModal{{ file.id }}" data-bs-dismiss="modal">
                                                         ✏️ تعديل
                                                     </button>
@@ -163,7 +160,7 @@
                 </div>
             </div>
 
-            <!-- مودال تعديل المادة لكل مادة (بدون وصف) -->
+            <!-- مودال تعديل المادة -->
             <div class="modal fade" id="editSubjectModal{{ sub.id }}" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -417,7 +414,11 @@
                             {% if track.action_performed == '/' %}
                                 <span class="badge bg-primary">الصفحة الرئيسية للمكتبة</span>
                             {% elif track.action_performed.startswith('/subject/') %}
-                                <span class="badge bg-success">استعراض مادة دراسية</span>
+                                {% set sub_id = track.action_performed.split('/')[-1] %}
+                                {% set target_sub = subjects | selectattr('id', 'equalto', sub_id | int) | first %}
+                                <span class="badge bg-success">
+                                    📖 فتح مادة: {{ target_sub.name if target_sub else ('مادة رقم ' + sub_id) }}
+                                </span>
                             {% elif track.action_performed.startswith('/open_file/') %}
                                 <span class="badge bg-info text-dark">فتح ملف دراسي (Google Drive)</span>
                             {% elif track.action_performed.startswith('/ranking') %}
@@ -605,7 +606,9 @@
                                     {% if track.action_performed == '/' %}
                                         الصفحة الرئيسية للمكتبة
                                     {% elif track.action_performed.startswith('/subject/') %}
-                                        استعراض مادة دراسية
+                                        {% set sub_id = track.action_performed.split('/')[-1] %}
+                                        {% set target_sub = subjects | selectattr('id', 'equalto', sub_id | int) | first %}
+                                        فتح مادة: {{ target_sub.name if target_sub else ('مادة رقم ' + sub_id) }}
                                     {% elif track.action_performed.startswith('/open_file/') %}
                                         فتح ملف دراسي (Google Drive)
                                     {% elif track.action_performed.startswith('/ranking') %}
