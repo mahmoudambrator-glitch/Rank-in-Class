@@ -130,16 +130,17 @@ def subject_detail(subject_id):
 
 @app.route('/open_file/<int:file_id>')
 def open_file(file_id):
-    """توجه الطالب مباشرة إلى رابط Google Drive في تاب جديد"""
+    """زيادة عدد مرات الفتح وتوجه الطالب مباشرة إلى رابط Google Drive في تاب جديد"""
     file_item = MaterialFile.query.get_or_404(file_id)
     if file_item.file_path:
+        # زيادة عدد مرات الفتح بواقع 1 وحفظ التغيير
+        file_item.views_count = (file_item.views_count or 0) + 1
+        db.session.commit()
+        
         return redirect(file_item.file_path)
     
     flash('❌ الرابط المطلوب غير موجود!', 'danger')
     return redirect(url_for('home'))
-
-
-# --- لوحة التحكم المركزية ---
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
