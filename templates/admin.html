@@ -265,6 +265,7 @@
             <table class="table table-bordered table-striped text-center align-middle mb-0">
                 <thead>
                     <tr>
+                        <th>الترتيب</th>
                         <th>الاسم ثلاثي</th>
                         <th>الرقم القومي</th>
                         <th>الـ GPA</th>
@@ -274,6 +275,7 @@
                 <tbody>
                     {% for student in students[:8] %}
                     <tr>
+                        <td><span class="badge bg-dark fs-6">{{ loop.index }}</span></td>
                         <td>{{ student.name }}</td>
                         <td>{{ student.nat_id }}</td>
                         <td>
@@ -290,7 +292,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="4" class="text-muted">لا يوجد طلاب مسجلين حتى الآن.</td>
+                        <td colspan="5" class="text-muted">لا يوجد طلاب مسجلين حتى الآن.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -489,6 +491,7 @@
                     <table class="table table-bordered table-striped text-center align-middle">
                         <thead>
                             <tr>
+                                <th>الترتيب</th>
                                 <th>الاسم ثلاثي</th>
                                 <th>الرقم القومي</th>
                                 <th>الـ GPA</th>
@@ -498,6 +501,7 @@
                         <tbody>
                             {% for student in students %}
                             <tr>
+                                <td><span class="badge bg-dark fs-6">{{ loop.index }}</span></td>
                                 <td>{{ student.name }}</td>
                                 <td>{{ student.nat_id }}</td>
                                 <td>
