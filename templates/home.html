@@ -2,55 +2,89 @@
 {% block content %}
 <style>
     .welcome-card {
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        border: none;
         border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+        position: relative;
+        overflow: hidden;
+    }
+    .welcome-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: 5px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
     .subject-card {
         background: #ffffff;
         border: none;
-        border-radius: 16px;
+        border-radius: 18px;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+        overflow: hidden;
     }
     .subject-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        border-color: #cbd5e1;
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(118, 75, 162, 0.12);
+    }
+    .subject-icon-box {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.4rem;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
     }
     .btn-main-action {
-        background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border: none;
         color: white;
         transition: all 0.3s ease;
+        font-weight: 700;
     }
     .btn-main-action:hover {
-        background: linear-gradient(135deg, #4338ca 0%, #2563eb 100%);
+        opacity: 0.9;
         color: white;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        box-shadow: 0 5px 15px rgba(118, 75, 162, 0.35);
+        transform: translateY(-1px);
     }
 </style>
 
+<!-- بطاقة الترحيب -->
 <div class="row text-center mb-5">
     <div class="col-12">
-        <div class="p-3 welcome-card shadow-sm">
-            <h6 class="fw-bold text-secondary mb-1">مرحباً بك في مكتبة Ꭿ ᎷᏰ ᎡᎯ ᎿᏫᎡ</h6>
-            <p class="text-muted small mb-0">اختر المادة الدراسية لعرض الملخصات والملفات المتاحة</p>
+        <div class="p-4 welcome-card shadow-sm">
+            <h5 class="fw-bold text-dark mb-2">مرحباً بك في مكتبة Ꭿ ᎷᏰ ᎡᎯ ᎿᏫᎡ 🏛️</h5>
+            <p class="text-muted mb-0">اختر المادة الدراسية لعرض الملخصات والملفات المتاحة بكل سهولة</p>
         </div>
     </div>
 </div>
 
+<!-- قائمة المواد -->
 <div class="row g-4">
     {% for sub in subjects %}
-    <div class="col-md-4">
-        <div class="card subject-card h-100 p-2">
-            <div class="card-body d-flex flex-column justify-content-between p-3">
-                <div>
-                    <h5 class="card-title text-dark fw-bold mb-3">{{ sub.name }}</h5>
+    <div class="col-md-4 col-sm-6">
+        <div class="card subject-card h-100">
+            <div class="card-body d-flex flex-column justify-content-between p-4">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="subject-icon-box">
+                        <i class="bi bi-book-half"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title text-dark fw-bold mb-0">{{ sub.name }}</h5>
+                        <small class="text-muted">مادة دراسية</small>
+                    </div>
                 </div>
                 <div class="mt-3">
-                    <a href="{{ url_for('subject_detail', subject_id=sub.id) }}" class="btn btn-main-action w-100 fw-bold py-2 rounded-pill shadow-sm">
-                        عرض الملفات ({{ sub.files|length }})
+                    <a href="{{ url_for('subject_detail', subject_id=sub.id) }}" class="btn btn-main-action w-100 py-2 rounded-pill shadow-sm">
+                        <i class="bi bi-eye-fill ms-1"></i> عرض الملفات ({{ sub.files|length }})
                     </a>
                 </div>
             </div>
@@ -58,8 +92,9 @@
     </div>
     {% else %}
     <div class="col-12">
-        <div class="alert alert-light text-center border py-5 rounded-4 shadow-sm">
-            <h5 class="text-muted mb-0">لا توجد مواد دراسية مضافة حتى الآن.</h5>
+        <div class="alert alert-light text-center border py-5 rounded-4 shadow-sm text-muted">
+            <i class="bi bi-folder2-open display-4 mb-3 d-block"></i>
+            <h5 class="mb-0">لا توجد مواد دراسية مضافة حتى الآن. انتظر الإضافات يا إمبراطور!</h5>
         </div>
     </div>
     {% endfor %}
