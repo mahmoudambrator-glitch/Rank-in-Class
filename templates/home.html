@@ -1,35 +1,38 @@
 {% extends "base.html" %}
 {% block content %}
 <style>
-    /* لون الخلفية العامة للموقع بالكامل */
+    /* لون خلفية عامة احترافي وفخم للموقع */
     body {
-        background-color: #f1f5f9; /* يمكنك تعديل هذا اللون حسب رغبتك */
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        min-height: 100vh;
     }
 
+    /* مربع الترحيب بتدرج ألوان أنيق ومريح */
     .welcome-card {
-        background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
-        border: 2px solid #cbd5e1;
+        background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+        border: 2px solid #bfdbfe;
         border-radius: 20px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.1);
     }
     
-    /* ألوان مختلفة ومتنوعة لكروت المواد تلقائياً بناءً على الـ Loop Index */
-    .subject-card-0 { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-color: #bfdbfe; }
-    .subject-card-1 { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-color: #bbf7d0; }
-    .subject-card-2 { background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-color: #fecaca; }
-    .subject-card-3 { background: linear-gradient(135deg, #fefce8 0%, #fef08a 100%); border-color: #fde047; }
-    .subject-card-4 { background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border-color: #e9d5ff; }
-    .subject-card-5 { background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border-color: #fed7aa; }
+    /* ألوان كروت المواد المتميزة والجذابة تلقائياً */
+    .subject-card-0 { background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%); border-color: #93c5fd; }
+    .subject-card-1 { background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%); border-color: #86efac; }
+    .subject-card-2 { background: linear-gradient(135deg, #ffffff 0%, #fef2f2 100%); border-color: #fca5a5; }
+    .subject-card-3 { background: linear-gradient(135deg, #ffffff 0%, #fefce8 100%); border-color: #fde047; }
+    .subject-card-4 { background: linear-gradient(135deg, #ffffff 0%, #faf5ff 100%); border-color: #d8b4fe; }
+    .subject-card-5 { background: linear-gradient(135deg, #ffffff 0%, #fff7ed 100%); border-color: #fdba74; }
 
     .subject-card {
         border-radius: 18px;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
-        border: 1px solid;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+        border-width: 2px;
+        border-style: solid;
     }
     .subject-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.08);
+        transform: translateY(-6px);
+        box-shadow: 0 18px 30px -5px rgba(0, 0, 0, 0.1);
     }
     .btn-main-action {
         background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
@@ -40,7 +43,7 @@
     .btn-main-action:hover {
         background: linear-gradient(135deg, #4338ca 0%, #2563eb 100%);
         color: white;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
     }
 </style>
 
