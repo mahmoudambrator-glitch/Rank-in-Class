@@ -5,7 +5,7 @@
         <div class="col-12">
             <div class="p-4 bg-white rounded-4 shadow-sm border-start border-primary border-4">
                 <h2 class="fw-bold text-primary mb-1">📚 مادة: {{ subject.name }}</h2>
-                <p class="text-muted mb-0">استعرض كافة الملخصات والمحاضرات الخاصة بهذه المادة بكل سهولة</p>
+                <p class="text-muted mb-0">استعرض كافة الملخصات والمحاضرات الخاصة بهذه المادة مرتبة أبجدياً بكل سهولة</p>
             </div>
         </div>
     </div>
@@ -14,9 +14,9 @@
         <div class="col-12">
             <h4 class="mb-3 fw-bold text-dark">الملفات المتاحة:</h4>
             
-            {% if subject.files %}
+            {% if files %}
             <div class="d-flex flex-column gap-3">
-                {% for file in subject.files %}
+                {% for file in files %}
                 <div class="card border-0 shadow-sm rounded-4 p-3 d-flex flex-row justify-content-between align-items-center">
                     <div class="d-flex align-items-center gap-3">
                         <i class="bi bi-file-earmark-pdf-fill text-danger fs-3"></i>
