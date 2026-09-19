@@ -97,10 +97,26 @@
                 {% set file_class = "file-card-" ~ (loop.index0 % 6) %}
                 <div class="card rounded-4 p-3 d-flex flex-row justify-content-between align-items-center file-card {{ file_class }}">
                     
-                    <!-- معلومات الملف والأيقونة -->
+                    <!-- معلومات الملف والأيقونة المتغيرة حسب النوع -->
                     <div class="d-flex align-items-center gap-3">
-                        <div class="fs-3 text-danger bg-white p-2 rounded-3 shadow-sm">
-                            <i class="bi bi-file-earmark-pdf-fill"></i>
+                        <div class="fs-3 bg-white p-2 rounded-3 shadow-sm 
+                            {% if file.file_type == 'كتاب' %} text-primary
+                            {% elif file.file_type == 'ملخص' %} text-success
+                            {% elif file.file_type == 'محاضرة' %} text-warning
+                            {% elif file.file_type == 'امتحان سابق' %} text-danger
+                            {% else %} text-info {% endif %}">
+                            
+                            {% if file.file_type == 'كتاب' %}
+                                <i class="bi bi-book-fill"></i>
+                            {% elif file.file_type == 'ملخص' %}
+                                <i class="bi bi-file-earmark-text-fill"></i>
+                            {% elif file.file_type == 'محاضرة' %}
+                                <i class="bi bi-file-earmark-play-fill"></i>
+                            {% elif file.file_type == 'امتحان سابق' %}
+                                <i class="bi bi-file-earmark-check-fill"></i>
+                            {% else %}
+                                <i class="bi bi-file-earmark-pdf-fill"></i>
+                            {% endif %}
                         </div>
                         <div>
                             <span class="badge bg-dark mb-1 px-2 py-1" style="font-size: 0.75rem;">{{ file.file_type or 'محاضرة' }}</span>
