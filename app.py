@@ -90,7 +90,8 @@ def track_visit():
 
         current_visitor = session.get('student_name') or 'زائر عام'
 
-        if not session.get('has_visited'):
+        # تعديل عداد الزيارات ليحسب مع كل فتح جديد للموقع أو انتهاء الجلسة عند الصفر
+        if request.path == '/' and not session.get('counted_this_session'):
             visit = VisitLog(
                 visitor_type=current_visitor,
                 ip_address=request.remote_addr, 
@@ -98,8 +99,9 @@ def track_visit():
             )
             db.session.add(visit)
             db.session.commit()
-            session['has_visited'] = True
+            session['counted_this_session'] = True
 
+        # كود تتبع الخطوات والتنقل الأصلي كما هو تماماً دون أي تغيير
         last_track = TrackingLog.query.filter_by(ip_address=request.remote_addr).order_by(TrackingLog.timestamp.desc()).first()
         
         if not last_track or last_track.action_performed != request.path or last_track.visitor_type != current_visitor:
@@ -110,7 +112,7 @@ def track_visit():
             )
             db.session.add(track)
             db.session.commit()
-
+            
 @app.route('/')
 def home():
     subjects = Subject.query.order_by(Subject.name.asc()).all()
