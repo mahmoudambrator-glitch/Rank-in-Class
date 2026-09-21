@@ -84,22 +84,34 @@ import uuid
 @app.before_request
 def track_visit():
     if not request.path.startswith('/static') and not request.path.startswith('/admin') and 'favicon.ico' not in request.path:
-        if 'visitor_uuid' not in session:
-            session['visitor_uuid'] = str(uuid.uuid4())
-            session['has_visited'] = False
-
         current_visitor = session.get('student_name') or 'زائر عام'
+        
+        now = datetime.now(ZoneInfo("Africa/Cairo"))
+        last_time_str = session.get('last_active_time')
+        
+        is_new_visit = False
+        if not last_time_str:
+            is_new_visit = True
+        else:
+            last_time = datetime.fromisoformat(last_time_str)
+            # إذا مر أكثر من 3 دقائق منذ آخر نشاط (يعني خرج ورجع للموقع)
+            if (now - last_time) > timedelta(minutes=3):
+                is_new_visit = True
 
-        # تعديل عداد الزيارات ليحسب مع كل فتح جديد للموقع أو انتهاء الجلسة عند الصفر
-        if request.path == '/' and not session.get('counted_this_session'):
+        # إذا كانت زيارة جديدة وتم فتح الصفحة الرئيسية
+        if is_new_visit and request.path == '/':
+            status_text = 'تسجيل دخول طالب' if session.get('student_name') else 'زيارة الموقع الرئيسية'
+            
             visit = VisitLog(
                 visitor_type=current_visitor,
                 ip_address=request.remote_addr, 
-                page_visited='دخول الموقع'
+                page_visited=status_text
             )
             db.session.add(visit)
             db.session.commit()
-            session['counted_this_session'] = True
+
+        # تحديث وقت آخر نشاط للجلسة الحالية
+        session['last_active_time'] = now.isoformat()
 
         # كود تتبع الخطوات والتنقل الأصلي كما هو تماماً دون أي تغيير
         last_track = TrackingLog.query.filter_by(ip_address=request.remote_addr).order_by(TrackingLog.timestamp.desc()).first()
