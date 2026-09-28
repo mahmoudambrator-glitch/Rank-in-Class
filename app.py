@@ -140,6 +140,20 @@ def open_file(file_id):
     file_item = MaterialFile.query.get_or_404(file_id)
     if file_item.file_path:
         file_item.views_count = (file_item.views_count or 0) + 1
+        
+        # تسجيل مسار الفتح بالطريقة القياسية المتوافقة 100% مع لوحة التحكم
+        current_visitor = session.get('student_name') or 'زائر عام'
+        path_action = f"/open_file/{file_id}"
+        
+        last_track = TrackingLog.query.filter_by(ip_address=request.remote_addr).order_by(TrackingLog.timestamp.desc()).first()
+        if not last_track or last_track.action_performed != path_action:
+            track = TrackingLog(
+                visitor_type=current_visitor,
+                ip_address=request.remote_addr,
+                action_performed=path_action
+            )
+            db.session.add(track)
+        
         db.session.commit()
         return redirect(file_item.file_path)
     
