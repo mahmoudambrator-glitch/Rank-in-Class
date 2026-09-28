@@ -139,8 +139,21 @@ def subject_detail(subject_id):
 def open_file(file_id):
     file_item = MaterialFile.query.get_or_404(file_id)
     if file_item.file_path:
+        subject = Subject.query.get(file_item.subject_id)
         file_item.views_count = (file_item.views_count or 0) + 1
+        
+        # تسجيل الحركة مباشرة باسم الملف والمادة لتفادي أي أخطاء في المقارنة
+        current_visitor = session.get('student_name') or 'زائر عام'
+        action_desc = f"فتح ملف: {file_item.title} (مادة: {subject.name if subject else 'غير معروفة'})"
+        
+        track = TrackingLog(
+            visitor_type=current_visitor,
+            ip_address=request.remote_addr,
+            action_performed=action_desc
+        )
+        db.session.add(track)
         db.session.commit()
+        
         return redirect(file_item.file_path)
     
     flash('❌ الرابط المطلوب غير موجود!', 'danger')
