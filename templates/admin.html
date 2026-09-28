@@ -425,9 +425,20 @@
                                 <span class="badge bg-success">
                                     📖 فتح مادة: {{ target_sub.name if target_sub else ('مادة رقم ' + sub_id) }}
                                 </span>
-                            {% elif track.action_performed.startswith('فتح ملف:') %}
+                            {% elif track.action_performed.startswith('/open_file/') %}
+                                {% set file_id = track.action_performed.split('/')[-1] %}
+                                {% set target_file = none %}
+                                {% set target_sub = none %}
+                                {% for s in subjects %}
+                                    {% for f in s.files %}
+                                        {% if f.id|string == file_id|string %}
+                                            {% set target_file = f %}
+                                            {% set target_sub = s %}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endfor %}
                                 <span class="badge bg-info text-dark">
-                                    📄 {{ track.action_performed }}
+                                    📄 فتح ملف: {{ target_file.title if target_file else 'ملف' }} (📖 {{ target_sub.name if target_sub else 'مادة' }})
                                 </span>
                             {% elif track.action_performed.startswith('/ranking') %}
                                 <span class="badge bg-warning text-dark">منصة ترتيب الدفعة</span>
@@ -621,8 +632,19 @@
                                         {% set sub_id = track.action_performed.split('/')[-1] %}
                                         {% set target_sub = subjects | selectattr('id', 'equalto', sub_id | int) | first %}
                                         فتح مادة: {{ target_sub.name if target_sub else ('مادة رقم ' + sub_id) }}
-                                    {% elif track.action_performed.startswith('فتح ملف:') %}
-                                        {{ track.action_performed }}
+                                    {% elif track.action_performed.startswith('/open_file/') %}
+                                        {% set file_id = track.action_performed.split('/')[-1] %}
+                                        {% set target_file = none %}
+                                        {% set target_sub = none %}
+                                        {% for s in subjects %}
+                                            {% for f in s.files %}
+                                                {% if f.id|string == file_id|string %}
+                                                    {% set target_file = f %}
+                                                    {% set target_sub = s %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endfor %}
+                                        فتح ملف: {{ target_file.title if target_file else 'ملف' }} (مادة: {{ target_sub.name if target_sub else 'مادة' }})
                                     {% elif track.action_performed.startswith('/ranking') %}
                                         منصة ترتيب الدفعة
                                     {% else %}
@@ -640,4 +662,4 @@
     </div>
 </div>
 
-{% endfor %}
+{% endblock %}
