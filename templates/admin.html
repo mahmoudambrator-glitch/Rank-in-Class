@@ -90,6 +90,7 @@
             {% endif %}
         </div>
 
+        <!-- القائمة الرئيسية لعرض أول 5 مواد فقط -->
         <ul class="list-group mb-4" id="subjectsList">
             {% for sub in subjects[:5] %}
             <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2 subject-item">
@@ -107,86 +108,89 @@
                     </form>
                 </div>
             </li>
-
-            <!-- مودال عرض ملفات وتفاصيل المادة -->
-            <div class="modal fade" id="subjectFilesModal{{ sub.id }}" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-xl modal-dialog-scrollable">
-                    <div class="modal-content">
-                        <div class="modal-header bg-primary text-white">
-                            <h5 class="modal-title">📁 تفاصيل ملفات مادة: {{ sub.name }}</h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            {% if sub.files %}
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-striped text-center align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th>عنوان الملف / المحاضرة</th>
-                                            <th>النوع</th>
-                                            <th>عدد مرات الفتح</th>
-                                            <th>الإجراء</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for file in sub.files %}
-                                        <tr>
-                                            <td class="fw-bold">{{ file.title }}</td>
-                                            <td><span class="badge bg-info text-dark">{{ file.file_type }}</span></td>
-                                            <td><span class="badge bg-dark fs-6">{{ file.views_count if file.views_count is defined else 0 }} مرة</span></td>
-                                            <td>
-                                                <div class="d-flex justify-content-center gap-2">
-                                                    <a href="{{ file.file_path }}" target="_blank" class="btn btn-success btn-sm">🔗 فتح الملف</a>
-                                                    
-                                                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editFileModal{{ file.id }}" data-bs-dismiss="modal">
-                                                        ✏️ تعديل
-                                                    </button>
-
-                                                    <form action="{{ url_for('delete_file', file_id=file.id) }}" method="POST" style="display:inline;">
-                                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('حذف الملف نهائياً؟')">حذف</button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                            {% else %}
-                            <p class="text-muted text-center py-3">لا توجد ملفات مرفوعة لهذه المادة حتى الآن.</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- مودال تعديل المادة -->
-            <div class="modal fade" id="editSubjectModal{{ sub.id }}" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header bg-warning text-dark">
-                            <h5 class="modal-title">✏️ تعديل مادة: {{ sub.name }}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <form action="{{ url_for('edit_subject', subject_id=sub.id) }}" method="POST">
-                            <div class="modal-body text-start">
-                                <div class="mb-3">
-                                    <label class="form-label">اسم المادة</label>
-                                    <input type="text" name="name" value="{{ sub.name }}" class="form-control" required>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                                <button type="submit" class="btn btn-warning">حفظ التعديلات</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
             {% endfor %}
         </ul>
     </div>
 </div>
+
+<!-- 🌟 تم نقل مودالات التفاصيل والتعديل لكل المواد هنا لتشمل الجميع وتعمل من "عرض الكل" بكفاءة -->
+{% for sub in subjects %}
+    <!-- مودال عرض ملفات وتفاصيل المادة -->
+    <div class="modal fade" id="subjectFilesModal{{ sub.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">📁 تفاصيل ملفات مادة: {{ sub.name }}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {% if sub.files %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped text-center align-middle">
+                            <thead>
+                                <tr>
+                                    <th>عنوان الملف / المحاضرة</th>
+                                    <th>النوع</th>
+                                    <th>عدد مرات الفتح</th>
+                                    <th>الإجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for file in sub.files %}
+                                <tr>
+                                    <td class="fw-bold">{{ file.title }}</td>
+                                    <td><span class="badge bg-info text-dark">{{ file.file_type }}</span></td>
+                                    <td><span class="badge bg-dark fs-6">{{ file.views_count if file.views_count is defined else 0 }} مرة</span></td>
+                                    <td>
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <a href="{{ file.file_path }}" target="_blank" class="btn btn-success btn-sm">🔗 فتح الملف</a>
+                                            
+                                            <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editFileModal{{ file.id }}" data-bs-dismiss="modal">
+                                                ✏️ تعديل
+                                            </button>
+
+                                            <form action="{{ url_for('delete_file', file_id=file.id) }}" method="POST" style="display:inline;">
+                                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('حذف الملف نهائياً؟')">حذف</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3">لا توجد ملفات مرفوعة لهذه المادة حتى الآن.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال تعديل المادة -->
+    <div class="modal fade" id="editSubjectModal{{ sub.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">✏️ تعديل مادة: {{ sub.name }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('edit_subject', subject_id=sub.id) }}" method="POST">
+                    <div class="modal-body text-start">
+                        <div class="mb-3">
+                            <label class="form-label">اسم المادة</label>
+                            <input type="text" name="name" value="{{ sub.name }}" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-warning">حفظ التعديلات</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endfor %}
 
 <!-- موديلات تعديل الملفات -->
 {% for sub in subjects %}
@@ -442,7 +446,7 @@
     </div>
 </div>
 
-<!-- الكود الجديد -->
+<!-- Modal عرض كل المواد الحالية -->
 <div class="modal fade" id="subjectsListModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
@@ -464,6 +468,7 @@
         </div>
     </div>
 </div>
+
 <!-- Modal عرض كل الطلاب -->
 <div class="modal fade" id="studentsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
